@@ -500,6 +500,17 @@ test('draw_line_string mouse interaction', (t) => {
   });
 });
 
+// jaybo
+const tapDebounceDelayMS = 400;
+function sleep(milliseconds) {
+  const date = Date.now();
+  let currentDate = null;
+  do {
+    currentDate = Date.now();
+  } while (currentDate - date < milliseconds);
+}
+
+
 test('draw_line_string touch interaction', (t) => {
   const container = document.createElement('div');
   document.body.appendChild(container);
@@ -512,6 +523,7 @@ test('draw_line_string touch interaction', (t) => {
 
     Draw.changeMode('draw_line_string');
     t.test('first tap', (st) => {
+      sleep(tapDebounceDelayMS);
       touchTap(map, makeTouchEvent(100, 200));
 
       const { features } = Draw.getAll();
@@ -525,6 +537,7 @@ test('draw_line_string touch interaction', (t) => {
     });
 
     t.test('tap to add another vertex', (st) => {
+      sleep(tapDebounceDelayMS);
       touchTap(map, makeTouchEvent(200, 400));
       const line = Draw.getAll().features[0];
       st.deepEqual(line.geometry.coordinates, [[100, 200], [200, 400], [200, 400]], 'last coordinate replaced');
@@ -532,15 +545,20 @@ test('draw_line_string touch interaction', (t) => {
     });
 
     t.test('add more points then tap on the last vertex to finish', (st) => {
+      sleep(tapDebounceDelayMS);
       touchTap(map, makeTouchEvent(400, 500));
+      sleep(tapDebounceDelayMS);
       touchTap(map, makeTouchEvent(300, 500));
+      sleep(tapDebounceDelayMS);
       touchTap(map, makeTouchEvent(200, 500));
+      sleep(tapDebounceDelayMS);
       touchTap(map, makeTouchEvent(200, 500));
       const line = Draw.getAll().features[0];
       st.deepEqual(line.geometry.coordinates,
         [[100, 200], [200, 400], [400, 500], [300, 500], [200, 500]],
         'all coordinates in place');
 
+      sleep(tapDebounceDelayMS);
       touchTap(map, makeTouchEvent(700, 700));
       st.deepEqual(line.geometry.coordinates,
         [[100, 200], [200, 400], [400, 500], [300, 500], [200, 500]],
@@ -553,8 +571,11 @@ test('draw_line_string touch interaction', (t) => {
       // Start a new line
       Draw.deleteAll();
       Draw.changeMode('draw_line_string');
+      sleep(tapDebounceDelayMS);
       touchTap(map, makeTouchEvent(100, 100));
+      sleep(tapDebounceDelayMS);
       touchTap(map, makeTouchEvent(200, 200));
+      sleep(tapDebounceDelayMS);
       touchTap(map, makeTouchEvent(300, 300));
 
       const line = Draw.getAll().features[0];
@@ -563,6 +584,7 @@ test('draw_line_string touch interaction', (t) => {
       Draw.trash();
       st.equal(Draw.getAll().features.length, 0, 'no feature added');
 
+      sleep(tapDebounceDelayMS);
       touchTap(map, makeTouchEvent(100, 100));
       st.equal(Draw.getAll().features.length, 0, 'no longer drawing');
 

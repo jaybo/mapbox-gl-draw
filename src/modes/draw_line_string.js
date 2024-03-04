@@ -94,7 +94,20 @@ DrawLineString.onMouseMove = function(state, e) {
   }
 };
 
-DrawLineString.onTap = DrawLineString.onClick = function(state, e) {
+DrawLineString.onClick = function(state, e) {
+  if (CommonSelectors.isVertex(e)) return this.clickOnVertex(state, e);
+  this.clickAnywhere(state, e);
+};
+
+DrawLineString.lastTapTime = Date.now();
+
+DrawLineString.onTap = function (state, e) {
+  const now = Date.now();
+  const tapDebounceTimeMS = 300;
+  if (now - this.lastTapTime < tapDebounceTimeMS) {
+    return;
+  }
+  this.lastTapTime = now;
   if (CommonSelectors.isVertex(e)) return this.clickOnVertex(state, e);
   this.clickAnywhere(state, e);
 };

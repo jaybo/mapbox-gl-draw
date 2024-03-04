@@ -25,6 +25,7 @@
     "consistent-return": "off",
     "global-require": "off",
     "key-spacing": "off",
+    "linebreak-style": "off",
     "no-eq-null": "off",
     "no-new": "off",
     "no-var": "error",
