@@ -1,9 +1,8 @@
-import test from 'node:test';
-import assert from 'node:assert/strict';
-import featuresAt from '../src/lib/features_at.js';
-import styles from '../src/lib/theme.js';
-import * as Constants from '../src/constants.js';
-import setupOptions from '../src/options.js';
+import test from 'tape';
+import featuresAt from '../src/lib/features_at';
+import styles from '../src/lib/theme';
+import * as Constants from '../src/constants';
+import setupOptions from '../src/options';
 
 /**
  * Mock of the addLayers function in setup
@@ -148,11 +147,11 @@ function createMockContext() {
   return context;
 }
 
-test('featuresAt with click bounding box', () => {
+test('featuresAt with click bounding box', (t) => {
   const mockContext = createMockContext();
   const result = featuresAt.click(null, [[10, 10], [20, 20]], mockContext);
 
-  assert.deepEqual(result, [{
+  t.deepEqual(result, [{
     type: 'Feature',
     properties: {
       meta: 'vertex',
@@ -174,14 +173,14 @@ test('featuresAt with click bounding box', () => {
     }
   }], 'sorts, filters based on properties.meta, removes duplicates');
 
-
+  t.end();
 });
 
-test('featuresAt with touch bounding box', () => {
+test('featuresAt with touch bounding box', (t) => {
   const mockContext = createMockContext();
   const result = featuresAt.touch(null, [[10, 10], [20, 20]], mockContext);
 
-  assert.deepEqual(result, [{
+  t.deepEqual(result, [{
     type: 'Feature',
     properties: {
       meta: 'vertex',
@@ -203,10 +202,10 @@ test('featuresAt with touch bounding box', () => {
     }
   }], 'sorts, filters based on properties.meta, removes duplicates');
 
-
+  t.end();
 });
 
-test('featuresAt should not include missing style layers', () => {
+test('featuresAt should not include missing style layers', (t) => {
   const mockContext = createMockContext();
 
   // mock of map's setStyle, which will remove all mapbox-gl-draw styles until the data event is fired, in which mapbox-gl-draw adds back in the styles.
@@ -214,13 +213,13 @@ test('featuresAt should not include missing style layers', () => {
 
   // featuresAt should return no features if the styles have not finished adding back in
   let result = featuresAt.touch(null, [[10, 10], [20, 20]], mockContext);
-  assert.deepEqual(result, [], 'sorts, filters based on properties.meta, removes duplicates');
+  t.deepEqual(result, [], 'sorts, filters based on properties.meta, removes duplicates');
 
   // mock adding layers back, similar to data event that fires and mapbox-gl-draw subsequently checks for any missing layers and adds them back in.
   addLayers(mockContext);
 
   result = featuresAt.touch(null, [[10, 10], [20, 20]], mockContext);
-  assert.deepEqual(result, [{
+  t.deepEqual(result, [{
     type: 'Feature',
     properties: {
       meta: 'vertex',
@@ -242,5 +241,5 @@ test('featuresAt should not include missing style layers', () => {
     }
   }], 'sorts, filters based on properties.meta, removes duplicates');
 
-
+  t.end();
 });

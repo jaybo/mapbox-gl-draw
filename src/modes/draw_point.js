@@ -1,5 +1,5 @@
-import * as CommonSelectors from '../lib/common_selectors.js';
-import * as Constants from '../constants.js';
+import * as CommonSelectors from '../lib/common_selectors';
+import * as Constants from '../constants';
 
 const DrawPoint = {};
 
@@ -34,7 +34,7 @@ DrawPoint.stopDrawingAndRemove = function(state) {
 DrawPoint.onTap = DrawPoint.onClick = function(state, e) {
   this.updateUIClasses({ mouse: Constants.cursors.MOVE });
   state.point.updateCoordinate('', e.lngLat.lng, e.lngLat.lat);
-  this.fire(Constants.events.CREATE, {
+  this.map.fire(Constants.events.CREATE, {
     features: [state.point.toGeoJSON()]
   });
   this.changeMode(Constants.modes.SIMPLE_SELECT, { featureIds: [state.point.id] });

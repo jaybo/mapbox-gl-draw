@@ -1,7 +1,7 @@
-import toDenseArray from './lib/to_dense_array.js';
-import StringSet from './lib/string_set.js';
-import render from './render.js';
-import * as Constants from './constants.js';
+import toDenseArray from './lib/to_dense_array';
+import StringSet from './lib/string_set';
+import render from './render';
+import {interactions} from './constants';
 
 export default function Store(ctx) {
   this._features = {};
@@ -9,6 +9,7 @@ export default function Store(ctx) {
   this._selectedFeatureIds = new StringSet();
   this._selectedCoordinates = [];
   this._changedFeatureIds = new StringSet();
+  this._deletedFeaturesToEmit = [];
   this._emitSelectionChange = false;
   this._mapInitialConfig = {};
   this.ctx = ctx;
@@ -24,32 +25,12 @@ export default function Store(ctx) {
       renderRequest = requestAnimationFrame(() => {
         renderRequest = null;
         render.call(this);
-
-        // Fire deduplicated selection change event
-        if (this._emitSelectionChange) {
-          this.ctx.events.fire(Constants.events.SELECTION_CHANGE, {
-            features: this.getSelected().map(feature => feature.toGeoJSON()),
-            points: this.getSelectedCoordinates().map(coordinate => ({
-              type: Constants.geojsonTypes.FEATURE,
-              properties: {},
-              geometry: {
-                type: Constants.geojsonTypes.POINT,
-                coordinates: coordinate.coordinates
-              }
-            }))
-          });
-
-          this._emitSelectionChange = false;
-        }
-
-        // Fire render event
-        this.ctx.events.fire(Constants.events.RENDER, {});
       });
     }
   };
-
   this.isDirty = false;
 }
+
 
 /**
  * Delays all rendering until the returned function is invoked
@@ -138,24 +119,18 @@ Store.prototype.add = function(feature) {
  * @return {Store} this
  */
 Store.prototype.delete = function(featureIds, options = {}) {
-  const deletedFeaturesToEmit = [];
   toDenseArray(featureIds).forEach((id) => {
     if (!this._featureIds.has(id)) return;
     this._featureIds.delete(id);
     this._selectedFeatureIds.delete(id);
     if (!options.silent) {
-      if (deletedFeaturesToEmit.indexOf(this._features[id]) === -1) {
-        deletedFeaturesToEmit.push(this._features[id].toGeoJSON());
+      if (this._deletedFeaturesToEmit.indexOf(this._features[id]) === -1) {
+        this._deletedFeaturesToEmit.push(this._features[id]);
       }
     }
     delete this._features[id];
     this.isDirty = true;
   });
-
-  if (deletedFeaturesToEmit.length) {
-    this.ctx.events.fire(Constants.events.DELETE, {features: deletedFeaturesToEmit});
-  }
-
   refreshSelectedCoordinates(this, options);
   return this;
 };
@@ -281,7 +256,7 @@ Store.prototype.getSelectedIds = function() {
  * @return {Array<Object>} Selected features.
  */
 Store.prototype.getSelected = function() {
-  return this.getSelectedIds().map(id => this.get(id));
+  return this._selectedFeatureIds.values().map(id => this.get(id));
 };
 
 /**
@@ -330,7 +305,7 @@ function refreshSelectedCoordinates(store, options) {
  * Stores the initial config for a map, so that we can set it again after we're done.
 */
 Store.prototype.storeMapConfig = function() {
-  Constants.interactions.forEach((interaction) => {
+  interactions.forEach((interaction) => {
     const interactionSet = this.ctx.map[interaction];
     if (interactionSet) {
       this._mapInitialConfig[interaction] = this.ctx.map[interaction].isEnabled();

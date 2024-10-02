@@ -1,9 +1,8 @@
-import test from 'node:test';
-import assert from 'node:assert/strict';
+import test from 'tape';
 import Point from '@mapbox/point-geometry';
-import mouseEventPoint from '../src/lib/mouse_event_point.js';
+import mouseEventPoint from '../src/lib/mouse_event_point';
 
-test('mouseEventPoint', () => {
+test('mouseEventPoint', (t) => {
   const mockContainer = {
     clientLeft: 2,
     clientTop: 1,
@@ -21,7 +20,9 @@ test('mouseEventPoint', () => {
   };
 
   const result = mouseEventPoint(mockEvent, mockContainer);
-  assert.equal(result instanceof Point, true);
-  assert.equal(result.x, 3);
-  assert.equal(result.y, 12);
+  t.equal(result instanceof Point, true);
+  t.equal(result.x, 3);
+  t.equal(result.y, 12);
+
+  t.end();
 });

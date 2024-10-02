@@ -1,6 +1,6 @@
-import click from './mouse_click.js';
-import {setupAfterNextRender} from './after_next_render.js';
-import makeMouseEvent from './make_mouse_event.js';
+import click from './mouse_click';
+import setupAfterNextRender from './after_next_render';
+import makeMouseEvent from './make_mouse_event';
 
 /**
  * Draws a feature on a map.
@@ -12,17 +12,24 @@ const mapFeaturesToModes = {
   LineString: 'draw_line_string'
 };
 
-export async function drawGeometry(map, draw, type, coordinates) {
+export default function drawGeometry(map, draw, type, coordinates, cb) {
   const afterNextRender = setupAfterNextRender(map);
   draw.changeMode(mapFeaturesToModes[type]);
-
   let drawCoordinates;
   if (type === 'Polygon') drawCoordinates = coordinates[0];
   if (type === 'Point') drawCoordinates = [coordinates];
   if (type === 'LineString') drawCoordinates = coordinates;
 
-  for (const point of drawCoordinates) {
+  const addCoordinate = function(idx) {
+    const point = drawCoordinates[idx];
+    if (point === undefined) {
+      return cb();
+    }
     click(map, makeMouseEvent(point[0], point[1], false));
-    await afterNextRender();
-  }
+    afterNextRender(() => {
+      addCoordinate(idx + 1);
+    });
+  };
+
+  addCoordinate(0);
 }

@@ -1,7 +1,6 @@
 import createSyntheticEvent from 'synthetic-dom-events';
-import * as Constants from '../../src/constants.js';
 
-const classList = [Constants.classes.CANVAS];
+const classList = ['mapboxgl-canvas'];
 classList.contains = function(cls) {
   return classList.indexOf(cls) >= 0;
 };

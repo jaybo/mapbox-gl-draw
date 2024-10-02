@@ -1,4 +1,4 @@
-import ModeInterface from './mode_interface.js';
+import ModeInterface from './mode_interface';
 
 const eventMapper = {
   drag: 'onDrag',

@@ -7,12 +7,13 @@ Benchmarks help us catch performance regressions and improve performance.
 Start the benchmark server
 
 ```bash
-MAPBOX_ACCESS_TOKEN={YOUR MAPBOX ACCESS TOKEN} npm run start-bench
+MAPBOX_ACCESS_TOKEN={YOUR MAPBOX ACCESS TOKEN} npm start
 ```
 
 Open a benchmark runner page
 
- - http://localhost:9967/bench/
+ - **buffer benchmark** http://localhost:9966/bench/buffer
+ - **fps benchmark** http://localhost:9966/bench/fps
 
 ## Writing a Benchmark
 

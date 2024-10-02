@@ -1,6 +1,8 @@
+import xtend from 'xtend';
+
 export default function(lng = 0, lat = 0, eventProperties = {}) {
   const e = {
-    originalEvent: Object.assign({
+    originalEvent: xtend({
       stopPropagation() {},
       button: 0,
       clientX: lng,

@@ -1,277 +1,276 @@
-import test from 'node:test';
-import assert from 'node:assert/strict';
-import getGeoJSON from './utils/get_geojson.js';
-import constrainFeatureMovement from '../src/lib/constrain_feature_movement.js';
+import test from 'tape';
+import getGeoJSON from './utils/get_geojson';
+import constrainFeatureMovement from '../src/lib/constrain_feature_movement';
 
-test('constrainFeatureMovement point, no constraint', () => {
+test('constrainFeatureMovement point, no constraint', (t) => {
   const point = getGeoJSON('point');
   point.geometry.coordinates = [10, 20];
   const constrainedDelta = constrainFeatureMovement([point], {
     lat: 13,
     lng: 0
   });
-  assert.deepEqual(constrainedDelta, {
+  t.deepEqual(constrainedDelta, {
     lat: 13,
     lng: 0
   });
-
+  t.end();
 });
 
-test('constrainFeatureMovement point, requiring northern constraint', () => {
+test('constrainFeatureMovement point, requiring northern constraint', (t) => {
   const point = getGeoJSON('point');
   point.geometry.coordinates = [10, 20];
   const constrainedDelta = constrainFeatureMovement([point], {
     lat: 80,
     lng: 0
   });
-  assert.deepEqual(constrainedDelta, {
+  t.deepEqual(constrainedDelta, {
     lat: 65,
     lng: 0
   }, 'stopped within projection');
-
+  t.end();
 });
 
-test('constrainFeatureMovement point, requiring southern constraint', () => {
+test('constrainFeatureMovement point, requiring southern constraint', (t) => {
   const point = getGeoJSON('point');
   point.geometry.coordinates = [10, -20];
   const constrainedDelta = constrainFeatureMovement([point], {
     lat: -80,
     lng: 0
   });
-  assert.deepEqual(constrainedDelta, {
+  t.deepEqual(constrainedDelta, {
     lat: -65,
     lng: 0
   }, 'stopped within projection');
-
+  t.end();
 });
 
-test('constrainFeatureMovement point, requiring western wrap', () => {
+test('constrainFeatureMovement point, requiring western wrap', (t) => {
   const point = getGeoJSON('point');
   point.geometry.coordinates = [10, -20];
   const constrainedDelta = constrainFeatureMovement([point], {
     lat: 10,
     lng: -300
   });
-  assert.deepEqual(constrainedDelta, {
+  t.deepEqual(constrainedDelta, {
     lat: 10,
     lng: 60
   }, 'stopped within bounds');
-
+  t.end();
 });
 
-test('constrainFeatureMovement point, requiring eastern wrap', () => {
+test('constrainFeatureMovement point, requiring eastern wrap', (t) => {
   const point = getGeoJSON('point');
   point.geometry.coordinates = [10, 20];
   const constrainedDelta = constrainFeatureMovement([point], {
     lat: 10,
     lng: 300
   });
-  assert.deepEqual(constrainedDelta, {
+  t.deepEqual(constrainedDelta, {
     lat: 10,
     lng: -60
   }, 'stopped within bounds');
-
+  t.end();
 });
 
-test('constrainFeatureMovement line, no constraint', () => {
+test('constrainFeatureMovement line, no constraint', (t) => {
   const line = getGeoJSON('line');
   line.geometry.coordinates = [[0, 0], [10, 10], [20, 20]];
   const constrainedDelta = constrainFeatureMovement([line], {
     lat: 13,
     lng: 0
   });
-  assert.deepEqual(constrainedDelta, {
+  t.deepEqual(constrainedDelta, {
     lat: 13,
     lng: 0
   });
-
+  t.end();
 });
 
-test('constrainFeatureMovement line, requiring northern inner constraint', () => {
+test('constrainFeatureMovement line, requiring northern inner constraint', (t) => {
   const line = getGeoJSON('line');
   line.geometry.coordinates = [[80, 80], [81, 81]];
   const constrainedDelta = constrainFeatureMovement([line], {
     lat: 7,
     lng: 0
   });
-  assert.deepEqual(constrainedDelta, {
+  t.deepEqual(constrainedDelta, {
     lat: 5,
     lng: 0
   }, 'stopped within projection');
-
+  t.end();
 });
 
-test('constrainFeatureMovement line, requiring northern outer constraint', () => {
+test('constrainFeatureMovement line, requiring northern outer constraint', (t) => {
   const line = getGeoJSON('line');
   line.geometry.coordinates = [[30, 30], [81, 81]];
   const constrainedDelta = constrainFeatureMovement([line], {
     lat: 12,
     lng: 0
   });
-  assert.deepEqual(constrainedDelta, {
+  t.deepEqual(constrainedDelta, {
     lat: 9,
     lng: 0
   }, 'stopped within poles');
-
+  t.end();
 });
 
-test('constrainFeatureMovement line, requiring southern inner constraint', () => {
+test('constrainFeatureMovement line, requiring southern inner constraint', (t) => {
   const line = getGeoJSON('line');
   line.geometry.coordinates = [[-80, -80], [-81, -81]];
   const constrainedDelta = constrainFeatureMovement([line], {
     lat: -7,
     lng: 0
   });
-  assert.deepEqual(constrainedDelta, {
+  t.deepEqual(constrainedDelta, {
     lat: -5,
     lng: 0
   }, 'stopped within projection');
-
+  t.end();
 });
 
-test('constrainFeatureMovement line, requiring southern outer constraint', () => {
+test('constrainFeatureMovement line, requiring southern outer constraint', (t) => {
   const line = getGeoJSON('line');
   line.geometry.coordinates = [[-30, -30], [-81, -81]];
   const constrainedDelta = constrainFeatureMovement([line], {
     lat: -12,
     lng: 0
   });
-  assert.deepEqual(constrainedDelta, {
+  t.deepEqual(constrainedDelta, {
     lat: -9,
     lng: 0
   }, 'stopped within poles');
-
+  t.end();
 });
 
-test('constrainFeatureMovement line, requiring western wrap', () => {
+test('constrainFeatureMovement line, requiring western wrap', (t) => {
   const line = getGeoJSON('line');
   line.geometry.coordinates = [[0, 0], [10, 10], [20, 20]];
   const constrainedDelta = constrainFeatureMovement([line], {
     lat: 0,
     lng: -280
   });
-  assert.deepEqual(constrainedDelta, {
+  t.deepEqual(constrainedDelta, {
     lat: 0,
     lng: 80
   });
-
+  t.end();
 });
 
-test('constrainFeatureMovement line, requiring eastern wrap', () => {
+test('constrainFeatureMovement line, requiring eastern wrap', (t) => {
   const line = getGeoJSON('line');
   line.geometry.coordinates = [[0, 0], [10, 10], [20, 20]];
   const constrainedDelta = constrainFeatureMovement([line], {
     lat: 0,
     lng: 255
   });
-  assert.deepEqual(constrainedDelta, {
+  t.deepEqual(constrainedDelta, {
     lat: 0,
     lng: -105
   });
-
+  t.end();
 });
 
-test('constrainFeatureMovement polygon, no constraint', () => {
+test('constrainFeatureMovement polygon, no constraint', (t) => {
   const polygon = getGeoJSON('polygon');
-  polygon.geometry.coordinates = [[[0, 0], [10, 10], [20, 20], [0, 0]]];
+  polygon.geometry.coordinates = [[0, 0], [10, 10], [20, 20], [0, 0]];
   const constrainedDelta = constrainFeatureMovement([polygon], {
     lat: 13,
     lng: 0
   });
-  assert.deepEqual(constrainedDelta, {
+  t.deepEqual(constrainedDelta, {
     lat: 13,
     lng: 0
   });
-
+  t.end();
 });
 
-test('constrainFeatureMovement polygon, requiring northern inner constraint', () => {
+test('constrainFeatureMovement polygon, requiring northern inner constraint', (t) => {
   const polygon = getGeoJSON('polygon');
-  polygon.geometry.coordinates = [[[80, 80], [81, 81], [81, 82], [80, 80]]];
+  polygon.geometry.coordinates = [[80, 80], [81, 81], [81, 82], [80, 80]];
   const constrainedDelta = constrainFeatureMovement([polygon], {
     lat: 7,
     lng: 0
   });
-  assert.deepEqual(constrainedDelta, {
+  t.deepEqual(constrainedDelta, {
     lat: 5,
     lng: 0
   }, 'stopped within projection');
-
+  t.end();
 });
 
-test('constrainFeatureMovement polygon, requiring northern outer constraint', () => {
+test('constrainFeatureMovement polygon, requiring northern outer constraint', (t) => {
   const polygon = getGeoJSON('polygon');
-  polygon.geometry.coordinates = [[[30, 30], [30, 40], [81, 81], [30, 30]]];
+  polygon.geometry.coordinates = [[30, 30], [30, 40], [81, 81], [30, 30]];
   const constrainedDelta = constrainFeatureMovement([polygon], {
     lat: 12,
     lng: 0
   });
-  assert.deepEqual(constrainedDelta, {
+  t.deepEqual(constrainedDelta, {
     lat: 9,
     lng: 0
   }, 'stopped within poles');
-
+  t.end();
 });
 
-test('constrainFeatureMovement polygon, requiring southern inner constraint', () => {
+test('constrainFeatureMovement polygon, requiring southern inner constraint', (t) => {
   const polygon = getGeoJSON('polygon');
-  polygon.geometry.coordinates = [[[-80, -80], [-81, -81], [-81, -82], [-80, -80]]];
+  polygon.geometry.coordinates = [[-80, -80], [-81, -81], [-81, -82], [-80, -80]];
   const constrainedDelta = constrainFeatureMovement([polygon], {
     lat: -7,
     lng: 0
   });
-  assert.deepEqual(constrainedDelta, {
+  t.deepEqual(constrainedDelta, {
     lat: -5,
     lng: 0
   }, 'stopped within projection');
-
+  t.end();
 });
 
-test('constrainFeatureMovement polygon, requiring southern outer constraint', () => {
+test('constrainFeatureMovement polygon, requiring southern outer constraint', (t) => {
   const polygon = getGeoJSON('polygon');
-  polygon.geometry.coordinates = [[[-30, -30], [-30, -40], [-81, -81], [-30, -30]]];
+  polygon.geometry.coordinates = [[-30, -30], [-30, -40], [-81, -81], [-30, -30]];
   const constrainedDelta = constrainFeatureMovement([polygon], {
     lat: -12,
     lng: 0
   });
-  assert.deepEqual(constrainedDelta, {
+  t.deepEqual(constrainedDelta, {
     lat: -9,
     lng: 0
   }, 'stopped within poles');
-
+  t.end();
 });
 
-test('constrainFeatureMovement polygon, requiring western wrap', () => {
+test('constrainFeatureMovement polygon, requiring western wrap', (t) => {
   const polygon = getGeoJSON('polygon');
-  polygon.geometry.coordinates = [[[0, 0], [10, 10], [20, 20], [0, 0]]];
+  polygon.geometry.coordinates = [[0, 0], [10, 10], [20, 20], [0, 0]];
   const constrainedDelta = constrainFeatureMovement([polygon], {
     lat: 70,
     lng: -270
   });
-  assert.deepEqual(constrainedDelta, {
+  t.deepEqual(constrainedDelta, {
     lat: 70,
     lng: 90
   });
-
+  t.end();
 });
 
-test('constrainFeatureMovement polygon, requiring eastern wrap', () => {
+test('constrainFeatureMovement polygon, requiring eastern wrap', (t) => {
   const polygon = getGeoJSON('polygon');
-  polygon.geometry.coordinates = [[[0, 0], [10, 10], [20, 20], [0, 0]]];
+  polygon.geometry.coordinates = [[0, 0], [10, 10], [20, 20], [0, 0]];
   const constrainedDelta = constrainFeatureMovement([polygon], {
     lat: 35,
     lng: 270
   });
-  assert.deepEqual(constrainedDelta, {
+  t.deepEqual(constrainedDelta, {
     lat: 35,
     lng: -90
   });
-
+  t.end();
 });
 
-test('constrainFeatureMovement many features, no constraint', () => {
+test('constrainFeatureMovement many features, no constraint', (t) => {
   const polygon = getGeoJSON('polygon');
-  polygon.geometry.coordinates = [[[0, 0], [10, 10], [20, 20], [0, 0]]];
+  polygon.geometry.coordinates = [[0, 0], [10, 10], [20, 20], [0, 0]];
   const point = getGeoJSON('point');
   point.geometry.coordinates = [15, 15];
   const line = getGeoJSON('line');
@@ -280,16 +279,16 @@ test('constrainFeatureMovement many features, no constraint', () => {
     lat: 13,
     lng: 0
   });
-  assert.deepEqual(constrainedDelta, {
+  t.deepEqual(constrainedDelta, {
     lat: 13,
     lng: 0
   });
-
+  t.end();
 });
 
-test('constrainFeatureMovement many features, requiring northern inner constraint', () => {
+test('constrainFeatureMovement many features, requiring northern inner constraint', (t) => {
   const polygon = getGeoJSON('polygon');
-  polygon.geometry.coordinates = [[[80, 80], [81, 81], [81, 82], [80, 80]]];
+  polygon.geometry.coordinates = [[80, 80], [81, 81], [81, 82], [80, 80]];
   const point = getGeoJSON('point');
   point.geometry.coordinates = [15, 15];
   const line = getGeoJSON('line');
@@ -298,16 +297,16 @@ test('constrainFeatureMovement many features, requiring northern inner constrain
     lat: 13,
     lng: 0
   });
-  assert.deepEqual(constrainedDelta, {
+  t.deepEqual(constrainedDelta, {
     lat: 5,
     lng: 0
   }, 'stopped within projection');
-
+  t.end();
 });
 
-test('constrainFeatureMovement many features, requiring northern outer constraint', () => {
+test('constrainFeatureMovement many features, requiring northern outer constraint', (t) => {
   const polygon = getGeoJSON('polygon');
-  polygon.geometry.coordinates = [[[0, 0], [10, 10], [20, 20], [0, 0]]];
+  polygon.geometry.coordinates = [[0, 0], [10, 10], [20, 20], [0, 0]];
   const point = getGeoJSON('point');
   point.geometry.coordinates = [15, 15];
   const line = getGeoJSON('line');
@@ -316,16 +315,16 @@ test('constrainFeatureMovement many features, requiring northern outer constrain
     lat: 100,
     lng: 0
   });
-  assert.deepEqual(constrainedDelta, {
+  t.deepEqual(constrainedDelta, {
     lat: 65,
     lng: 0
   }, 'stopped within poles');
-
+  t.end();
 });
 
-test('constrainFeatureMovement many features, requiring southern inner constraint', () => {
+test('constrainFeatureMovement many features, requiring southern inner constraint', (t) => {
   const polygon = getGeoJSON('polygon');
-  polygon.geometry.coordinates = [[[-80, -80], [-81, -81], [-81, -82], [-80, -80]]];
+  polygon.geometry.coordinates = [[-80, -80], [-81, -81], [-81, -82], [-80, -80]];
   const point = getGeoJSON('point');
   point.geometry.coordinates = [15, 15];
   const line = getGeoJSON('line');
@@ -334,16 +333,16 @@ test('constrainFeatureMovement many features, requiring southern inner constrain
     lat: -10,
     lng: 0
   });
-  assert.deepEqual(constrainedDelta, {
+  t.deepEqual(constrainedDelta, {
     lat: -5,
     lng: 0
   }, 'stopped within projection');
-
+  t.end();
 });
 
-test('constrainFeatureMovement many features, requiring southern outer constraint', () => {
+test('constrainFeatureMovement many features, requiring southern outer constraint', (t) => {
   const polygon = getGeoJSON('polygon');
-  polygon.geometry.coordinates = [[[0, 0], [10, 10], [20, 20], [0, 0]]];
+  polygon.geometry.coordinates = [[0, 0], [10, 10], [20, 20], [0, 0]];
   const point = getGeoJSON('point');
   point.geometry.coordinates = [15, 15];
   const line = getGeoJSON('line');
@@ -352,16 +351,16 @@ test('constrainFeatureMovement many features, requiring southern outer constrain
     lat: -200,
     lng: 0
   });
-  assert.deepEqual(constrainedDelta, {
+  t.deepEqual(constrainedDelta, {
     lat: -90,
     lng: 0
   }, 'stopped within poles');
-
+  t.end();
 });
 
-test('constrainFeatureMovement many features, requiring western wrap', () => {
+test('constrainFeatureMovement many features, requiring western wrap', (t) => {
   const polygon = getGeoJSON('polygon');
-  polygon.geometry.coordinates = [[[0, 0], [10, 10], [20, 20], [0, 0]]];
+  polygon.geometry.coordinates = [[0, 0], [10, 10], [20, 20], [0, 0]];
   const point = getGeoJSON('point');
   point.geometry.coordinates = [15, 15];
   const line = getGeoJSON('line');
@@ -370,16 +369,16 @@ test('constrainFeatureMovement many features, requiring western wrap', () => {
     lat: 27,
     lng: -310
   });
-  assert.deepEqual(constrainedDelta, {
+  t.deepEqual(constrainedDelta, {
     lat: 27,
     lng: 50
   });
-
+  t.end();
 });
 
-test('constrainFeatureMovement many features, requiring eastern wrap', () => {
+test('constrainFeatureMovement many features, requiring eastern wrap', (t) => {
   const polygon = getGeoJSON('polygon');
-  polygon.geometry.coordinates = [[[0, 0], [10, 10], [20, 20], [0, 0]]];
+  polygon.geometry.coordinates = [[0, 0], [10, 10], [20, 20], [0, 0]];
   const point = getGeoJSON('point');
   point.geometry.coordinates = [15, 15];
   const line = getGeoJSON('line');
@@ -388,9 +387,9 @@ test('constrainFeatureMovement many features, requiring eastern wrap', () => {
     lat: 27,
     lng: 260
   });
-  assert.deepEqual(constrainedDelta, {
+  t.deepEqual(constrainedDelta, {
     lat: 27,
     lng: -100
   });
-
+  t.end();
 });

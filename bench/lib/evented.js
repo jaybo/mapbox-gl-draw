@@ -1,10 +1,6 @@
 
 export default class Evented {
   on(type, listener) {
-    if (!listener) {
-      return new Promise(resolve => this.on(type, resolve));
-    }
-
     this._listeners = this._listeners || {};
     this._listeners[type] = this._listeners[type] || [];
     this._listeners[type].push(listener);

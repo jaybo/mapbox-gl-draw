@@ -1,135 +1,135 @@
-import test from 'node:test';
-import assert from 'node:assert/strict';
-import {spy} from 'sinon';
-
-import Store from '../src/store.js';
-import createFeature from './utils/create_feature.js';
-import getPublicMemberKeys from './utils/get_public_member_keys.js';
-import createMap from './utils/create_map.js';
+import test from 'tape';
+import Store from '../src/store';
+import createFeature from './utils/create_feature';
+import getPublicMemberKeys from './utils/get_public_member_keys';
+import createMap from './utils/create_map';
 
 function createStore() {
-  const ctx = {
-    map: createMap(),
-    events: {
-      fire: spy()
-    }
-  };
-
+  const map = createMap();
+  const ctx = { map };
   return new Store(ctx);
 }
 
-test('Store has correct properties', () => {
-  assert.ok(Store, 'store exists');
-  assert.ok(typeof Store === 'function', 'store is a function');
+test('Store has correct properties', (t) => {
+  t.ok(Store, 'store exists');
+  t.ok(typeof Store === 'function', 'store is a function');
+  t.end();
 });
 
-test('Store constructor and public API', () => {
+test('Store constructor and public API', (t) => {
   const map = createMap();
   const ctx = { map };
   const store = new Store(ctx);
 
   // instance members
-  assert.deepEqual(store.sources, {
+  t.deepEqual(store.sources, {
     hot: [],
     cold: []
   }, 'exposes store.sources');
-  assert.equal(store.ctx, ctx, 'exposes store.ctx');
-  assert.equal(store.ctx.map, map, 'exposes store.ctx.map');
-  assert.equal(store.isDirty, false, 'exposes store.isDirty');
-  assert.equal(typeof store.render, 'function', 'exposes store.render');
+  t.equal(store.ctx, ctx, 'exposes store.ctx');
+  t.equal(store.ctx.map, map, 'exposes store.ctx.map');
+  t.equal(store.isDirty, false, 'exposes store.isDirty');
+  t.equal(typeof store.render, 'function', 'exposes store.render');
 
-  assert.equal(getPublicMemberKeys(store).length, 4, 'no unexpected instance members');
+  t.equal(getPublicMemberKeys(store).length, 4, 'no unexpected instance members');
 
   // prototype members
-  assert.equal(typeof Store.prototype.setDirty, 'function', 'exposes store.setDirty');
-  assert.equal(typeof Store.prototype.createRenderBatch, 'function', 'exposes store.createRenderBatch');
-  assert.equal(typeof Store.prototype.featureChanged, 'function', 'exposes store.featureChanged');
-  assert.equal(typeof Store.prototype.getChangedIds, 'function', 'exposes store.getChangedIds');
-  assert.equal(typeof Store.prototype.clearChangedIds, 'function', 'exposes store.clearChangedIds');
-  assert.equal(typeof Store.prototype.getAllIds, 'function', 'exposes store.getAllIds');
-  assert.equal(typeof Store.prototype.add, 'function', 'exposes store.add');
-  assert.equal(typeof Store.prototype.get, 'function', 'exposes store.get');
-  assert.equal(typeof Store.prototype.getAll, 'function', 'exposes store.getAll');
-  assert.equal(typeof Store.prototype.select, 'function', 'exposes store.select');
-  assert.equal(typeof Store.prototype.deselect, 'function', 'exposes store.deselect');
-  assert.equal(typeof Store.prototype.clearSelected, 'function', 'exposes store.clearSelected');
-  assert.equal(typeof Store.prototype.getSelectedIds, 'function', 'exposes store.getSelectedIds');
-  assert.equal(typeof Store.prototype.getSelected, 'function', 'exposes store.getSelected');
-  assert.equal(typeof Store.prototype.isSelected, 'function', 'exposes store.isSelected');
-  assert.equal(typeof Store.prototype.delete, 'function', 'exposes store.delete');
-  assert.equal(typeof Store.prototype.setSelected, 'function', 'exposes store.setSelected');
-  assert.equal(typeof Store.prototype.setSelectedCoordinates, 'function', 'exposes store.setSelectedCoordinates');
-  assert.equal(typeof Store.prototype.getSelectedCoordinates, 'function', 'exposes store.getSelectedCoordinates');
-  assert.equal(typeof Store.prototype.clearSelectedCoordinates, 'function', 'exposes store.clearSelectedCoordinates');
-  assert.equal(typeof Store.prototype.setFeatureProperty, 'function', 'exposes store.setFeatureProperty');
-  assert.equal(typeof Store.prototype.storeMapConfig, 'function', 'exposes store.storeMapConfig');
-  assert.equal(typeof Store.prototype.restoreMapConfig, 'function', 'exposes store.restoreMapConfig');
-  assert.equal(typeof Store.prototype.getInitialConfigValue, 'function', 'exposes store.getInitialConfigValue');
+  t.equal(typeof Store.prototype.setDirty, 'function', 'exposes store.setDirty');
+  t.equal(typeof Store.prototype.createRenderBatch, 'function', 'exposes store.createRenderBatch');
+  t.equal(typeof Store.prototype.featureChanged, 'function', 'exposes store.featureChanged');
+  t.equal(typeof Store.prototype.getChangedIds, 'function', 'exposes store.getChangedIds');
+  t.equal(typeof Store.prototype.clearChangedIds, 'function', 'exposes store.clearChangedIds');
+  t.equal(typeof Store.prototype.getAllIds, 'function', 'exposes store.getAllIds');
+  t.equal(typeof Store.prototype.add, 'function', 'exposes store.add');
+  t.equal(typeof Store.prototype.get, 'function', 'exposes store.get');
+  t.equal(typeof Store.prototype.getAll, 'function', 'exposes store.getAll');
+  t.equal(typeof Store.prototype.select, 'function', 'exposes store.select');
+  t.equal(typeof Store.prototype.deselect, 'function', 'exposes store.deselect');
+  t.equal(typeof Store.prototype.clearSelected, 'function', 'exposes store.clearSelected');
+  t.equal(typeof Store.prototype.getSelectedIds, 'function', 'exposes store.getSelectedIds');
+  t.equal(typeof Store.prototype.getSelected, 'function', 'exposes store.getSelected');
+  t.equal(typeof Store.prototype.isSelected, 'function', 'exposes store.isSelected');
+  t.equal(typeof Store.prototype.delete, 'function', 'exposes store.delete');
+  t.equal(typeof Store.prototype.setSelected, 'function', 'exposes store.setSelected');
+  t.equal(typeof Store.prototype.setSelectedCoordinates, 'function', 'exposes store.setSelectedCoordinates');
+  t.equal(typeof Store.prototype.getSelectedCoordinates, 'function', 'exposes store.getSelectedCoordinates');
+  t.equal(typeof Store.prototype.clearSelectedCoordinates, 'function', 'exposes store.clearSelectedCoordinates');
+  t.equal(typeof Store.prototype.setFeatureProperty, 'function', 'exposes store.setFeatureProperty');
+  t.equal(typeof Store.prototype.storeMapConfig, 'function', 'exposes store.storeMapConfig');
+  t.equal(typeof Store.prototype.restoreMapConfig, 'function', 'exposes store.restoreMapConfig');
+  t.equal(typeof Store.prototype.getInitialConfigValue, 'function', 'exposes store.getInitialConfigValue');
 
-  assert.equal(getPublicMemberKeys(Store.prototype).length, 24, 'no untested prototype members');
+  t.equal(getPublicMemberKeys(Store.prototype).length, 24, 'no untested prototype members');
+
+  t.end();
 });
 
-test('Store#setDirty', () => {
+test('Store#setDirty', (t) => {
   const store = createStore();
-  assert.equal(store.isDirty, false);
+  t.equal(store.isDirty, false);
   store.setDirty();
-  assert.equal(store.isDirty, true);
+  t.equal(store.isDirty, true);
+  t.end();
 });
 
-test('Store#createRenderBatch', () => {
+test('Store#createRenderBatch', (t) => {
   const store = createStore();
   let numRenders = 0;
   store.render = function() {
     numRenders++;
   };
   store.render();
-  assert.equal(numRenders, 1, 'render incrementes number of renders');
+  t.equal(numRenders, 1, 'render incrementes number of renders');
   let renderBatch = store.createRenderBatch();
   store.render();
   store.render();
   store.render();
-  assert.equal(numRenders, 1, 'when batching render doesn\'t get incremented');
+  t.equal(numRenders, 1, 'when batching render doesn\'t get incremented');
   renderBatch();
-  assert.equal(numRenders, 2, 'when releasing batch, render only happens once');
+  t.equal(numRenders, 2, 'when releasing batch, render only happens once');
 
   renderBatch = store.createRenderBatch();
   renderBatch();
-  assert.equal(numRenders, 2, 'when releasing batch, render doesn\'t happen if render wasn\'t called');
+  t.equal(numRenders, 2, 'when releasing batch, render doesn\'t happen if render wasn\'t called');
+
+  t.end();
 });
 
-test('Store#featureChanged, Store#getChangedIds, Store#clearChangedIds', () => {
+test('Store#featureChanged, Store#getChangedIds, Store#clearChangedIds', (t) => {
   const store = createStore();
-  assert.deepEqual(store.getChangedIds(), []);
+  t.deepEqual(store.getChangedIds(), []);
   store.featureChanged('x');
-  assert.deepEqual(store.getChangedIds(), ['x']);
+  t.deepEqual(store.getChangedIds(), ['x']);
   store.featureChanged('y');
-  assert.deepEqual(store.getChangedIds(), ['x', 'y']);
+  t.deepEqual(store.getChangedIds(), ['x', 'y']);
   store.featureChanged('x');
-  assert.deepEqual(store.getChangedIds(), ['x', 'y'], 'ids do not duplicate');
+  t.deepEqual(store.getChangedIds(), ['x', 'y'], 'ids do not duplicate');
   store.clearChangedIds();
-  assert.deepEqual(store.getChangedIds(), []);
+  t.deepEqual(store.getChangedIds(), []);
+  t.end();
 });
 
-test('Store#add, Store#get, Store#getAll', () => {
+test('Store#add, Store#get, Store#getAll', (t) => {
   const store = createStore();
-  assert.equal(store.get(1), undefined);
-  assert.deepEqual(store.getAll(), []);
+  t.equal(store.get(1), undefined);
+  t.deepEqual(store.getAll(), []);
   const point = createFeature('point');
   const line = createFeature('line');
   store.add(point);
-  assert.equal(store.get(point.id), point);
-  assert.deepEqual(store.getAll(), [point]);
+  t.equal(store.get(point.id), point);
+  t.deepEqual(store.getAll(), [point]);
   store.add(line);
-  assert.equal(store.get(point.id), point);
-  assert.equal(store.get(line.id), line);
-  assert.deepEqual(store.getAll(), [point, line]);
+  t.equal(store.get(point.id), point);
+  t.equal(store.get(line.id), line);
+  t.deepEqual(store.getAll(), [point, line]);
   store.add(point);
-  assert.equal(store.get(point.id), point);
-  assert.equal(store.get(line.id), line);
-  assert.deepEqual(store.getAll(), [point, line]);
+  t.equal(store.get(point.id), point);
+  t.equal(store.get(line.id), line);
+  t.deepEqual(store.getAll(), [point, line]);
+  t.end();
 });
 
-test('selection methods', async (t) => {
+test('selection methods', (t) => {
   const store = createStore();
   const f1 = createFeature('point');
   store.add(f1);
@@ -140,56 +140,66 @@ test('selection methods', async (t) => {
   const f4 = createFeature('point');
   store.add(f4);
 
-  assert.deepEqual(store.getSelectedIds(), []);
+  t.deepEqual(store.getSelectedIds(), []);
 
-  t.test('select one feature', () => {
+  t.test('select one feature', (st) => {
     store.select(f1.id);
-    assert.deepEqual(store.getSelectedIds(), [f1.id], 'f1 returns in selected ids array');
-    assert.deepEqual(store.getSelected(), [f1.toGeoJSON()], 'f1 returns in selected array');
-    assert.equal(store.isSelected(f1.id), true, 'isSelected affirms f1');
-    assert.equal(store.isSelected(f2.id), false, 'isSelected rejects f2');
+    st.deepEqual(store.getSelectedIds(), [f1.id], 'f1 returns in selected ids array');
+    st.deepEqual(store.getSelected(), [f1.toGeoJSON()], 'f1 returns in selected array');
+    st.equal(store.isSelected(f1.id), true, 'isSelected affirms f1');
+    st.equal(store.isSelected(f2.id), false, 'isSelected rejects f2');
+    st.end();
   });
 
-  await t.test('select a second feature', () => {
+  t.test('select a second feature', (st) => {
     store.select(f2.id);
-    assert.deepEqual(store.getSelectedIds(), [f1.id, f2.id], 'f1 and f2 return in selected ids array');
-    assert.deepEqual(store.getSelected(), [f1, f2], 'f1 and f2 return in selected array');
-    assert.equal(store.isSelected(f1.id), true, 'isSelected affirms f1');
-    assert.equal(store.isSelected(f2.id), true, 'isSelected affirms f2');
+    st.deepEqual(store.getSelectedIds(), [f1.id, f2.id], 'f1 and f2 return in selected ids array');
+    st.deepEqual(store.getSelected(), [f1, f2], 'f1 and f2 return in selected array');
+    st.equal(store.isSelected(f1.id), true, 'isSelected affirms f1');
+    st.equal(store.isSelected(f2.id), true, 'isSelected affirms f2');
+    st.end();
   });
 
-  await t.test('try to re-select first feature', () => {
+  t.test('try to re-select first feature', (st) => {
     store.select(f1.id);
+    st.end();
   });
 
-  await t.test('deselect a feature', () => {
+  t.test('deselect a feature', (st) => {
     store.deselect(f1.id);
-    assert.deepEqual(store.getSelectedIds(), [f2.id], 'deselection of f1 clears it from selected array');
+    st.deepEqual(store.getSelectedIds(), [f2.id], 'deselection of f1 clears it from selected array');
+    st.end();
   });
 
-  await t.test('serially select more features', () => {
+  t.test('serially select more features', (st) => {
     store.select(f3.id);
     store.select(f4.id);
-    assert.deepEqual(store.getSelectedIds(), [f2.id, f3.id, f4.id], 'serial selection of f3 and f4 reflected in selected array');
+    st.deepEqual(store.getSelectedIds(), [f2.id, f3.id, f4.id], 'serial selection of f3 and f4 reflected in selected array');
+    st.end();
   });
 
-  await t.test('clear selection', () => {
+  t.test('clear selection', (st) => {
     store.clearSelected();
-    assert.deepEqual(store.getSelectedIds(), []);
+    st.deepEqual(store.getSelectedIds(), []);
+    st.end();
   });
 
-  t.test('select an array of features', () => {
+  t.test('select an array of features', (st) => {
     store.select([f1.id, f3.id, f4.id]);
-    assert.deepEqual(store.getSelectedIds(), [f1.id, f3.id, f4.id]);
+    st.deepEqual(store.getSelectedIds(), [f1.id, f3.id, f4.id]);
+    st.end();
   });
 
-  await t.test('deselect an array of features', () => {
+  t.test('deselect an array of features', (st) => {
     store.deselect([f1.id, f4.id]);
-    assert.deepEqual(store.getSelectedIds(), [f3.id]);
+    st.deepEqual(store.getSelectedIds(), [f3.id]);
+    st.end();
   });
+
+  t.end();
 });
 
-test('Store#delete', () => {
+test('Store#delete', (t) => {
   const store = createStore();
   const point = createFeature('point');
   const line = createFeature('line');
@@ -198,63 +208,70 @@ test('Store#delete', () => {
   store.add(point);
   store.add(line);
   store.add(polygon);
-  assert.deepEqual(store.getAll(), [point, line, polygon]);
-  assert.deepEqual(store.getAllIds(), [point.id, line.id, polygon.id]);
+  t.deepEqual(store.getAll(), [point, line, polygon]);
+  t.deepEqual(store.getAllIds(), [point.id, line.id, polygon.id]);
 
-  assert.deepEqual(store.getSelectedIds(), []);
+  t.deepEqual(store.getSelectedIds(), []);
   store.select(line.id);
-  assert.deepEqual(store.getSelectedIds(), [line.id]);
+  t.deepEqual(store.getSelectedIds(), [line.id]);
 
   store.delete(line.id);
-  assert.deepEqual(store.getAll(), [point, polygon]);
-  assert.deepEqual(store.getAllIds(), [point.id, polygon.id]);
-  assert.deepEqual(store.getSelectedIds(), []);
-  assert.equal(store.isDirty, true, 'after deletion store is dirty');
+  t.deepEqual(store.getAll(), [point, polygon]);
+  t.deepEqual(store.getAllIds(), [point.id, polygon.id]);
+  t.deepEqual(store.getSelectedIds(), []);
+  t.equal(store.isDirty, true, 'after deletion store is dirty');
+
+  t.end();
 });
 
-test('Store#setSelected', () => {
+test('Store#setSelected', (t) => {
   const store = createStore();
   const point = createFeature('point');
   const line = createFeature('line');
   const polygon = createFeature('polygon');
 
-  store.setSelected(point.id, {silent: true});
-  assert.deepEqual(store.getSelectedIds(), [point.id]);
+  store.setSelected(point.id);
+  t.deepEqual(store.getSelectedIds(), [point.id]);
 
-  store.setSelected([line.id, polygon.id], {silent: true});
-  assert.deepEqual(store.getSelectedIds(), [line.id, polygon.id]);
+  store.setSelected([line.id, polygon.id]);
+  t.deepEqual(store.getSelectedIds(), [line.id, polygon.id]);
 
-  store.setSelected(line.id, {silent: true});
-  assert.deepEqual(store.getSelectedIds(), [line.id]);
+  store.setSelected(line.id);
+  t.deepEqual(store.getSelectedIds(), [line.id]);
 
-  store.setSelected(undefined, {silent: true});
-  assert.deepEqual(store.getSelectedIds(), []);
+  store.setSelected();
+  t.deepEqual(store.getSelectedIds(), []);
+
+  t.end();
 });
 
-test('Store#setFeatureProperty', () => {
+test('Store#setFeatureProperty', (t) => {
   const store = createStore();
   const point = createFeature('point');
 
   store.add(point);
   store.clearChangedIds();
   store.setFeatureProperty(point.id, 'size', 200);
-  assert.deepEqual(store.getChangedIds(), [point.id]);
-  assert.equal(store.get(point.id).properties.size, 200, 'sets the property on the feature');
+  t.deepEqual(store.getChangedIds(), [point.id]);
+  t.equal(store.get(point.id).properties.size, 200, 'sets the property on the feature');
+
+  t.end();
 });
 
-test('Store#storeAndRestoreMapConfig', () => {
+test('Store#storeAndRestoreMapConfig', (t) => {
   const map = createMap();
   // Disable doubleClickZoom
   map.doubleClickZoom.disable();
   // Check it's disabled
-  assert.equal(map.doubleClickZoom.isEnabled(), false, 'Disables doubleClickZoom on the map');
+  t.equal(map.doubleClickZoom.isEnabled(), false, 'Disables doubleClickZoom on the map');
   const ctx = { map };
   const store = new Store(ctx);
   store.storeMapConfig();
   // Check we can get the initial state of it
-  assert.equal(store.getInitialConfigValue('doubleClickZoom'), false, 'Retrieves the initial value for the doubleClickZoom');
+  t.equal(store.getInitialConfigValue('doubleClickZoom'), false, 'Retrieves the initial value for the doubleClickZoom');
   // Enable it again, byt then use restore to reset the initial state
   map.doubleClickZoom.enable();
   store.restoreMapConfig();
-  assert.equal(map.doubleClickZoom.isEnabled(), false, 'Restores doubleClickZoom on the map');
+  t.equal(map.doubleClickZoom.isEnabled(), false, 'Restores doubleClickZoom on the map');
+  t.end();
 });

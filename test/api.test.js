@@ -1,101 +1,85 @@
 /* eslint no-shadow:[0] */
-import {test, beforeEach, afterEach} from 'node:test';
-import assert from 'node:assert/strict';
+import test from 'tape';
 import {spy} from 'sinon';
+import * as Constants from '../src/constants';
+import MapboxDraw from '../index';
+import createMap from './utils/create_map';
+import getGeoJSON from './utils/get_geojson';
+import setupAfterNextRender from './utils/after_next_render';
+import getPublicMemberKeys from './utils/get_public_member_keys';
 
-import * as Constants from '../src/constants.js';
-import MapboxDraw from '../index.js';
-import createMap from './utils/create_map.js';
-import getGeoJSON from './utils/get_geojson.js';
-import {setupAfterNextRender} from './utils/after_next_render.js';
-import getPublicMemberKeys from './utils/get_public_member_keys.js';
+const map = createMap();
+const afterNextRender = setupAfterNextRender(map);
+const Draw = new MapboxDraw();
+map.addControl(Draw);
+const addSpy = spy(Draw, 'add');
+const deleteSpy = spy(Draw, 'delete');
 
-let map;
-let afterNextRender;
-let Draw;
-let addSpy;
-let deleteSpy;
-
-beforeEach(() => {
-  map = createMap();
-  afterNextRender = setupAfterNextRender(map);
-  Draw = new MapboxDraw();
-  map.addControl(Draw);
-  addSpy = spy(Draw, 'add');
-  deleteSpy = spy(Draw, 'delete');
-});
-
-afterEach(() => {
-  map = null;
-  afterNextRender = null;
-  Draw = null;
-  addSpy = null;
-  deleteSpy = null;
-});
-
-test('Draw.getFeatureIdsAt', async () => {
+test('Draw.getFeatureIdsAt', (t) => {
   const feature = getGeoJSON('point');
   const [id] = Draw.add(feature);
+  afterNextRender(() => {
+    // These tests require the the pixel space
+    // and lat/lng space are equal (1px = 1deg)
+    const featureIds = Draw.getFeatureIdsAt({
+      x: feature.geometry.coordinates[0],
+      y: feature.geometry.coordinates[1]
+    });
 
-  await afterNextRender();
-
-  // These tests require the the pixel space
-  // and lat/lng space are equal (1px = 1deg)
-  const featureIds = Draw.getFeatureIdsAt({
-    x: feature.geometry.coordinates[0],
-    y: feature.geometry.coordinates[1]
+    t.equals(featureIds.length, 1, 'should return the added feature');
+    t.equals(featureIds[0], id, 'selected feature should match desired feature');
+    Draw.deleteAll();
+    t.end();
   });
-
-  assert.equal(featureIds.length, 1, 'should return the added feature');
-  assert.equal(featureIds[0], id, 'selected feature should match desired feature');
-  Draw.deleteAll();
 });
 
-test('Draw.getSelectedIds', () => {
+test('Draw.getSelectedIds', (t) => {
   const [lineId] = Draw.add(getGeoJSON('line'));
   const [pointId] = Draw.add(getGeoJSON('point'));
   const [polygonId] = Draw.add(getGeoJSON('polygon'));
   Draw.changeMode('simple_select', { featureIds: [lineId, pointId] });
   const selected = Draw.getSelectedIds();
-  assert.equal(selected.length, 2,
+  t.equal(selected.length, 2,
     'returns correct number of ids');
-  assert.notEqual(selected.indexOf(lineId), -1,
+  t.notEqual(selected.indexOf(lineId), -1,
     'result contains line');
-  assert.notEqual(selected.indexOf(pointId), -1,
+  t.notEqual(selected.indexOf(pointId), -1,
     'result contains point');
   Draw.changeMode('simple_select', { featureIds: [polygonId] });
   const nextSelected = Draw.getSelectedIds();
-  assert.equal(nextSelected.length, 1,
+  t.equal(nextSelected.length, 1,
     'updates length');
-  assert.equal(nextSelected[0], polygonId,
+  t.equal(nextSelected[0], polygonId,
     'updates content');
+  t.end();
 });
 
-test('Draw.getSelected', () => {
+test('Draw.getSelected', (t) => {
   const [lineId] = Draw.add(getGeoJSON('line'));
   const [pointId] = Draw.add(getGeoJSON('point'));
   const [polygonId] = Draw.add(getGeoJSON('polygon'));
   Draw.changeMode('simple_select', { featureIds: [lineId, pointId] });
   const fc = Draw.getSelected();
 
-  assert.equal(typeof fc.features, 'object', 'we have a feature collection');
+  t.equal(typeof fc.features, 'object', 'we have a feature collection');
 
   const selected = fc.features.map(f => f.id);
-  assert.equal(selected.length, 2,
+  t.equal(selected.length, 2,
     'returns correct number of ids');
-  assert.notEqual(selected.indexOf(lineId), -1,
+  t.notEqual(selected.indexOf(lineId), -1,
     'result contains line');
-  assert.notEqual(selected.indexOf(pointId), -1,
+  t.notEqual(selected.indexOf(pointId), -1,
     'result contains point');
   Draw.changeMode('simple_select', { featureIds: [polygonId] });
   const nextSelected = Draw.getSelected().features.map(f => f.id);
-  assert.equal(nextSelected.length, 1,
+  t.equal(nextSelected.length, 1,
     'updates length');
-  assert.equal(nextSelected[0], polygonId,
+  t.equal(nextSelected[0], polygonId,
     'updates content');
+  t.end();
 });
 
-test('Draw.set', () => {
+test('Draw.set', (t) => {
   const point = getGeoJSON('point');
   const line = getGeoJSON('line');
   const polygon = getGeoJSON('polygon');
@@ -106,18 +90,18 @@ test('Draw.set', () => {
     features: [point, line, polygon]
   };
   const drawInstance = Draw.set(collection);
-  assert.equal(drawInstance.length, 3,
+  t.equal(drawInstance.length, 3,
     'return value is correct length');
   const pointId = drawInstance[0];
   const lineId = drawInstance[1];
   const polygonId = drawInstance[2];
-  assert.equal(Draw.get(pointId).geometry.type, 'Point',
+  t.equal(Draw.get(pointId).geometry.type, 'Point',
     'point id returned');
-  assert.equal(Draw.get(lineId).geometry.type, 'LineString',
+  t.equal(Draw.get(lineId).geometry.type, 'LineString',
     'line id returned');
-  assert.equal(Draw.get(polygonId).geometry.type, 'Polygon',
+  t.equal(Draw.get(polygonId).geometry.type, 'Polygon',
     'polygon id returned');
-  assert.equal(Draw.getAll().features.length, 3,
+  t.equal(Draw.getAll().features.length, 3,
     'all features loaded');
 
   // Then set to another
@@ -128,18 +112,18 @@ test('Draw.set', () => {
     features: [polygon]
   };
   const nextDrawInstance = Draw.set(nextCollection);
-  assert.equal(nextDrawInstance.length, 1,
+  t.equal(nextDrawInstance.length, 1,
     'return value is correct length');
   const nextPolygonId = nextDrawInstance[0];
-  assert.equal(Draw.get(nextPolygonId).geometry.type, 'Polygon',
+  t.equal(Draw.get(nextPolygonId).geometry.type, 'Polygon',
     'polygon id returned');
-  assert.equal(Draw.getAll().features.length, 1,
+  t.equal(Draw.getAll().features.length, 1,
     'all features replaced with new ones');
-  assert.ok(addSpy.calledWith(nextCollection),
+  t.ok(addSpy.calledWith(nextCollection),
     'Draw.add called with new collection');
-  assert.equal(deleteSpy.callCount, 1,
+  t.equal(deleteSpy.callCount, 1,
     'Draw.delete called');
-  assert.deepEqual(deleteSpy.getCall(0).args, [[
+  t.deepEqual(deleteSpy.getCall(0).args, [[
     pointId,
     lineId,
     polygonId
@@ -157,66 +141,73 @@ test('Draw.set', () => {
     features: [newLine, overlappingPolygon]
   };
   const overlappingDrawInstance = Draw.set(overlappingCollection);
-  assert.equal(overlappingDrawInstance.length, 2,
+  t.equal(overlappingDrawInstance.length, 2,
     'return value is correct length');
   const newLineId = overlappingDrawInstance[0];
   const overlappingPolygonId = overlappingDrawInstance[1];
-  assert.equal(Draw.get(newLineId).geometry.type, 'LineString',
+  t.equal(Draw.get(newLineId).geometry.type, 'LineString',
     'new line id returned');
-  assert.equal(Draw.get(overlappingPolygonId).geometry.type, 'Polygon',
+  t.equal(Draw.get(overlappingPolygonId).geometry.type, 'Polygon',
     'overlapping polygon id returned');
-  assert.equal(overlappingPolygonId, nextPolygonId,
+  t.equal(overlappingPolygonId, nextPolygonId,
     'overlapping polygon id did not change');
-  assert.ok(addSpy.calledWith(overlappingCollection),
+  t.ok(addSpy.calledWith(overlappingCollection),
     'Draw.add called with overlapping collection');
-  assert.equal(deleteSpy.callCount, 0,
+  t.equal(deleteSpy.callCount, 0,
     'Draw.delete not called');
 
+  t.end();
 });
 
-test('Draw.set errors', () => {
-  assert.throws(() => {
+test('Draw.set errors', (t) => {
+  t.throws(() => {
     Draw.set(getGeoJSON('point'));
   }, 'when you pass a feature');
-  assert.throws(() => {
+  t.throws(() => {
     Draw.set({
       type: 'FeatureCollection'
     });
   }, 'when you pass a collection without features');
+  t.end();
 });
 
-test('Draw.add -- point', () => {
+test('Draw.add -- point', (t) => {
   const id = Draw.add(getGeoJSON('point'))[0];
-  assert.equal(typeof id, 'string', 'valid string id returned on add');
+  t.equals(typeof id, 'string', 'valid string id returned on add');
   Draw.deleteAll();
+  t.end();
 });
 
-test('Draw.add -- FeatureCollection', () => {
+test('Draw.add -- FeatureCollection', (t) => {
   const listOfIds = Draw.add(getGeoJSON('featureCollection'));
-  assert.equal(listOfIds.length, getGeoJSON('featureCollection').features.length,
+  t.equals(listOfIds.length, getGeoJSON('featureCollection').features.length,
     'valid string id returned when adding a featureCollection');
   Draw.deleteAll();
+  t.end();
 });
 
-test('Draw.add -- MultiPolygon', () => {
+test('Draw.add -- MultiPolygon', (t) => {
   const multiId = Draw.add(getGeoJSON('multiPolygon'))[0];
-  assert.equal('string', typeof multiId, 'accepts multi features');
+  t.equals('string', typeof multiId, 'accepts multi features');
   Draw.deleteAll();
+  t.end();
 });
 
-test('Draw.add -- null geometry', () => {
-  assert.throws(() => {
+test('Draw.add -- null geometry', (t) => {
+  t.throws(() => {
     Draw.add(getGeoJSON('nullGeometry'));
   }, 'null geometry is invalid');
+  t.end();
 });
 
-test('Draw.add -- GeometryCollection', () => {
-  assert.throws(() => {
+test('Draw.add -- GeometryCollection', (t) => {
+  t.throws(() => {
     Draw.add(getGeoJSON('geometryCollection'));
   }, 'geometry collections are not valid in Draw');
+  t.end();
 });
 
-test('Draw.add - accept lots of decimal percision', () => {
+test('Draw.add - accept lots of decimal percision', (t) => {
   for (let i = 0; i < 30; i++) {
     const div = Math.pow(10, i);
     const pos = [1 / div, 1 / div];
@@ -225,301 +216,322 @@ test('Draw.add - accept lots of decimal percision', () => {
       coordinates: pos
     });
     const point = Draw.get(id);
-    assert.equal(point.geometry.coordinates[0], pos[0], `lng right at 10e${i}`);
-    assert.equal(point.geometry.coordinates[1], pos[1], `lat right at 10e${i}`);
+    t.equals(point.geometry.coordinates[0], pos[0], `lng right at 10e${i}`);
+    t.equals(point.geometry.coordinates[1], pos[1], `lat right at 10e${i}`);
   }
   Draw.deleteAll();
+  t.end();
 });
 
-test('Draw.add -- change geometry type', () => {
+test('Draw.add -- change geometry type', (t) => {
   const id = Draw.add(getGeoJSON('point'))[0];
   const polygon = getGeoJSON('polygon');
   polygon.id = id;
   Draw.add(polygon);
-  assert.deepEqual(polygon, Draw.get(id), 'changed geometry type');
+  t.deepEquals(polygon, Draw.get(id), 'changed geometry type');
   Draw.deleteAll();
+  t.end();
 });
 
-test('Draw.add -- existing feature with changed properties', async () => {
+test('Draw.add -- existing feature with changed properties', (t) => {
   const id = Draw.add(getGeoJSON('point'));
   let point = Draw.get(id);
 
-  await afterNextRender();
-
-  point.properties = {'testing': 123};
-  Draw.add(point);
-  point = Draw.get(id);
-  assert.equal('testing', Object.keys(point.properties)[0]);
-  assert.equal(123, point.properties.testing);
-  Draw.deleteAll();
+  afterNextRender(() => {
+    point.properties = {'testing': 123};
+    Draw.add(point);
+    point = Draw.get(id);
+    t.equals('testing', Object.keys(point.properties)[0]);
+    t.equals(123, point.properties.testing);
+    Draw.deleteAll();
+    t.end();
+  });
 });
 
-test('Draw.get', () => {
+test('Draw.get', (t) => {
   const id = Draw.add(getGeoJSON('point'));
   const f = Draw.get(id);
-  assert.deepEqual(
+  t.deepEquals(
     getGeoJSON('point').geometry.coordinates,
     f.geometry.coordinates,
     'the geometry added is the same returned by Draw.get'
   );
 
-  assert.equal(Draw.get('foo'), undefined,
+  t.equal(Draw.get('foo'), undefined,
     'returned undefined when no feature found');
 
   Draw.deleteAll();
+  t.end();
 });
 
-test('Draw.getAll', () => {
+test('Draw.getAll', (t) => {
   Draw.add(getGeoJSON('point'));
-  assert.deepEqual(
+  t.deepEquals(
     getGeoJSON('point').geometry,
     Draw.getAll().features[0].geometry,
     'the geometry added is the same returned by Draw.getAll'
   );
   Draw.deleteAll();
+  t.end();
 });
 
-test('Draw.delete one feature', () => {
+test('Draw.delete one feature', (t) => {
   const id = Draw.add(getGeoJSON('point'))[0];
   const drawInstance = Draw.delete(id);
-  assert.equal(drawInstance, Draw, 'returns Draw instance');
-  assert.equal(Draw.getAll().features.length, 0, 'can remove a feature by its id');
+  t.equals(drawInstance, Draw, 'returns Draw instance');
+  t.equals(Draw.getAll().features.length, 0, 'can remove a feature by its id');
+  t.end();
 });
 
-test('Draw.delete multiple features', () => {
+test('Draw.delete multiple features', (t) => {
   const [pointId] = Draw.add(getGeoJSON('point'));
   const [lineId] = Draw.add(getGeoJSON('line'));
   Draw.add(getGeoJSON('polygon'));
   const drawInstance = Draw.delete([pointId, lineId]);
-  assert.equal(drawInstance, Draw, 'returns Draw instance');
-  assert.equal(Draw.getAll().features.length, 1, 'can remove multiple features by id');
-  assert.equal(Draw.getAll().features[0].geometry.type, 'Polygon',
+  t.equals(drawInstance, Draw, 'returns Draw instance');
+  t.equals(Draw.getAll().features.length, 1, 'can remove multiple features by id');
+  t.equals(Draw.getAll().features[0].geometry.type, 'Polygon',
     'the right features were removed');
   Draw.deleteAll();
+  t.end();
 });
 
-test('Draw.delete a feature that is direct_selected', () => {
+test('Draw.delete a feature that is direct_selected', (t) => {
   const [id] = Draw.add(getGeoJSON('polygon'));
   Draw.changeMode('direct_select', { featureId: id });
   Draw.delete([id]);
-  assert.equal(Draw.getAll().features.length, 0, 'removed the feature');
-  assert.equal(Draw.getMode(), 'simple_select', 'changed modes to simple_select');
+  t.equals(Draw.getAll().features.length, 0, 'removed the feature');
+  t.equals(Draw.getMode(), 'simple_select', 'changed modes to simple_select');
+  t.end();
 });
 
-test('Draw.deleteAll', () => {
+test('Draw.deleteAll', (t) => {
   Draw.add(getGeoJSON('point'));
   const drawInstance = Draw.deleteAll();
-  assert.equal(drawInstance, Draw, 'returns Draw instance');
-  assert.equal(Draw.getAll().features.length, 0, 'Draw.deleteAll removes all geometries');
+  t.equals(drawInstance, Draw, 'returns Draw instance');
+  t.equals(Draw.getAll().features.length, 0, 'Draw.deleteAll removes all geometries');
+  t.end();
 });
 
-test('Draw.deleteAll when in direct_select mode', async () => {
+test('Draw.deleteAll when in direct_select mode', (t) => {
   Draw.add(getGeoJSON('point'));
   const id = Draw.add(getGeoJSON('line'));
   Draw.changeMode('direct_select', { featureId: id });
   Draw.deleteAll();
-
-  await afterNextRender();
-
-  assert.equal(Draw.getMode(), 'simple_select',
-    'switches to simple_select mode');
-  assert.equal(Draw.getAll().features.length, 0,
-    'removes selected feature along with others');
+  afterNextRender(() => {
+    t.equal(Draw.getMode(), 'simple_select',
+      'switches to simple_select mode');
+    t.equal(Draw.getAll().features.length, 0,
+      'removes selected feature along with others');
+    t.end();
+  });
 });
 
-test('Draw.changeMode and Draw.getMode with no pre-existing feature', () => {
+test('Draw.changeMode and Draw.getMode with no pre-existing feature', (t) => {
   const drawInstance = Draw.changeMode('draw_polygon');
-  assert.equal(drawInstance, Draw, 'changeMode returns Draw instance');
-  assert.equal(Draw.getMode(), 'draw_polygon', 'changed to draw_polygon');
-  assert.equal(Draw.getAll().features.length, 1, 'one feature added');
-  assert.equal(Draw.getAll().features[0].geometry.type, 'Polygon', 'and it is a polygon');
-  assert.deepEqual(Draw.getAll().features[0].geometry.coordinates, [[null]], 'and it is empty');
+  t.equals(drawInstance, Draw, 'changeMode returns Draw instance');
+  t.equals(Draw.getMode(), 'draw_polygon', 'changed to draw_polygon');
+  t.equals(Draw.getAll().features.length, 1, 'one feature added');
+  t.equals(Draw.getAll().features[0].geometry.type, 'Polygon', 'and it is a polygon');
+  t.deepEquals(Draw.getAll().features[0].geometry.coordinates, [[null]], 'and it is empty');
 
   Draw.changeMode('draw_line_string');
-  assert.equal(Draw.getMode(), 'draw_line_string', 'changed to draw_line_string');
-  assert.equal(Draw.getAll().features.length, 1, 'still only one feature added');
-  assert.equal(Draw.getAll().features[0].geometry.type, 'LineString', 'and it is a line');
-  assert.deepEqual(Draw.getAll().features[0].geometry.coordinates, [], 'and it is empty');
+  t.equals(Draw.getMode(), 'draw_line_string', 'changed to draw_line_string');
+  t.equals(Draw.getAll().features.length, 1, 'still only one feature added');
+  t.equals(Draw.getAll().features[0].geometry.type, 'LineString', 'and it is a line');
+  t.deepEquals(Draw.getAll().features[0].geometry.coordinates, [], 'and it is empty');
 
   Draw.changeMode('draw_point');
-  assert.equal(Draw.getMode(), 'draw_point', 'changed to draw_point');
-  assert.equal(Draw.getAll().features.length, 1, 'still only one feature added');
-  assert.equal(Draw.getAll().features[0].geometry.type, 'Point', 'and it is a point');
-  assert.deepEqual(Draw.getAll().features[0].geometry.coordinates, [], 'and it is empty');
+  t.equals(Draw.getMode(), 'draw_point', 'changed to draw_point');
+  t.equals(Draw.getAll().features.length, 1, 'still only one feature added');
+  t.equals(Draw.getAll().features[0].geometry.type, 'Point', 'and it is a point');
+  t.deepEquals(Draw.getAll().features[0].geometry.coordinates, [], 'and it is empty');
 
   Draw.changeMode('simple_select');
-  assert.equal(Draw.getMode(), 'simple_select', 'changed to simple_select');
-  assert.equal(Draw.getAll().features.length, 0, 'no features added');
+  t.equals(Draw.getMode(), 'simple_select', 'changed to simple_select');
+  t.equals(Draw.getAll().features.length, 0, 'no features added');
 
-  assert.throws(() => {
+  t.throws(() => {
     Draw.changeMode('direct_select');
   }, 'cannot enter direct_select mode with a featureId');
 
+  t.end();
 });
 
-test('Draw.changeMode to select and de-select pre-existing features', async () => {
+test('Draw.changeMode to select and de-select pre-existing features', (t) => {
   const [polygonId] = Draw.add(getGeoJSON('polygon'));
   const [lineId] = Draw.add(getGeoJSON('line'));
   const [pointId] = Draw.add(getGeoJSON('point'));
 
   const returnA = Draw.changeMode('simple_select', { featureIds: [polygonId, lineId]});
-  assert.equal(returnA, Draw, 'returns Draw instance');
-  assert.equal(Draw.getMode(), 'simple_select', 'changed to simple_select');
-  assert.deepEqual(Draw.getSelectedIds(), [polygonId, lineId],
+  t.equals(returnA, Draw, 'returns Draw instance');
+  t.equals(Draw.getMode(), 'simple_select', 'changed to simple_select');
+  t.deepEquals(Draw.getSelectedIds(), [polygonId, lineId],
     'polygon and line are selected');
 
   const returnB = Draw.changeMode('simple_select', { featureIds: [polygonId, lineId]});
-  assert.equal(returnB, Draw, 'returns Draw instance');
-  assert.deepEqual(Draw.getSelectedIds(), [polygonId, lineId],
+  t.equals(returnB, Draw, 'returns Draw instance');
+  t.deepEquals(Draw.getSelectedIds(), [polygonId, lineId],
     'polygon and line are still selected');
 
   const returnC = Draw.changeMode('simple_select', { featureIds: [pointId] });
-  assert.equal(returnC, Draw, 'returns Draw instance');
+  t.equals(returnC, Draw, 'returns Draw instance');
+  afterNextRender(() => {
+    t.pass('a render occurred when selection changed');
 
-  await afterNextRender();
+    t.deepEquals(Draw.getSelectedIds(), [pointId],
+      'change to simple_select with different featureIds to change selection');
 
-  assert.ok('a render occurred when selection changed');
+    const returnD = Draw.changeMode('direct_select', { featureId: polygonId });
+    t.equals(returnD, Draw, 'returns Draw instance');
+    t.deepEquals(Draw.getSelectedIds(), [polygonId],
+      'change to direct_select changes selection');
 
-  assert.deepEqual(Draw.getSelectedIds(), [pointId],
-    'change to simple_select with different featureIds to change selection');
+    const returnE = Draw.changeMode('direct_select', { featureId: polygonId });
+    t.equals(returnE, Draw, 'returns Draw instance');
+    t.deepEquals(Draw.getSelectedIds(), [polygonId],
+      'changing to direct_select with same selection does nothing');
 
-  const returnD = Draw.changeMode('direct_select', { featureId: polygonId });
-  assert.equal(returnD, Draw, 'returns Draw instance');
-  assert.deepEqual(Draw.getSelectedIds(), [polygonId],
-    'change to direct_select changes selection');
-
-  const returnE = Draw.changeMode('direct_select', { featureId: polygonId });
-  assert.equal(returnE, Draw, 'returns Draw instance');
-  assert.deepEqual(Draw.getSelectedIds(), [polygonId],
-    'changing to direct_select with same selection does nothing');
-
-  Draw.deleteAll();
+    Draw.deleteAll();
+    t.end();
+  });
 });
 
-test('Draw.modes', () => {
-  assert.equal(Draw.modes.SIMPLE_SELECT, Constants.modes.SIMPLE_SELECT, 'simple_select');
-  assert.equal(Draw.modes.DIRECT_SELECT, Constants.modes.DIRECT_SELECT, 'direct_select');
-  assert.equal(Draw.modes.DRAW_POINT, Constants.modes.DRAW_POINT, 'draw_point');
-  assert.equal(Draw.modes.DRAW_LINE_STRING, Constants.modes.DRAW_LINE_STRING, 'draw_line_string');
-  assert.equal(Draw.modes.DRAW_POLYGON, Constants.modes.DRAW_POLYGON, 'draw_polygon');
-  assert.equal(getPublicMemberKeys(Draw.modes).length, 5, 'no unexpected modes');
+test('Draw.modes', (t) => {
+  t.equal(Draw.modes.SIMPLE_SELECT, Constants.modes.SIMPLE_SELECT, 'simple_select');
+  t.equal(Draw.modes.DIRECT_SELECT, Constants.modes.DIRECT_SELECT, 'direct_select');
+  t.equal(Draw.modes.DRAW_POINT, Constants.modes.DRAW_POINT, 'draw_point');
+  t.equal(Draw.modes.DRAW_LINE_STRING, Constants.modes.DRAW_LINE_STRING, 'draw_line_string');
+  t.equal(Draw.modes.DRAW_POLYGON, Constants.modes.DRAW_POLYGON, 'draw_polygon');
+  t.equal(Draw.modes.STATIC, Constants.modes.STATIC, 'static');
+  t.equal(getPublicMemberKeys(Draw.modes).length, 6, 'no unexpected modes');
+  t.end();
 });
 
-test('Draw.combineFeatures -- polygon + polygon = multiploygon', () => {
+test('Draw.combineFeatures -- polygon + polygon = multiploygon', (t) => {
   const [polygonId] = Draw.add(getGeoJSON('polygon'));
   const [polygon2Id] = Draw.add(getGeoJSON('polygon2'));
   Draw.changeMode('simple_select', { featureIds: [polygonId, polygon2Id]});
 
   Draw.combineFeatures();
-  assert.equal(Draw.getAll().features.length, 1, 'can combine two features');
-  assert.equal(Draw.getAll().features[0].geometry.type, 'MultiPolygon', 'can combine two polygons into MultiPolygon');
-  assert.deepEqual(Draw.getAll().features[0].geometry.coordinates[0], getGeoJSON('polygon').geometry.coordinates, 'first set of coordinates in multipolygon matches with second polygon in selection');
-  assert.deepEqual(Draw.getAll().features[0].geometry.coordinates[1], getGeoJSON('polygon2').geometry.coordinates, 'second set of coordinates in multipolygon matches with first polygon in selection');
+  t.equals(Draw.getAll().features.length, 1, 'can combine two features');
+  t.equals(Draw.getAll().features[0].geometry.type, 'MultiPolygon', 'can combine two polygons into MultiPolygon');
+  t.deepEquals(Draw.getAll().features[0].geometry.coordinates[0], getGeoJSON('polygon').geometry.coordinates, 'first set of coordinates in multipolygon matches with second polygon in selection');
+  t.deepEquals(Draw.getAll().features[0].geometry.coordinates[1], getGeoJSON('polygon2').geometry.coordinates, 'second set of coordinates in multipolygon matches with first polygon in selection');
   Draw.deleteAll();
+  t.end();
 });
 
-test('Draw.combineFeatures -- point + point = multipoint', () => {
+test('Draw.combineFeatures -- point + point = multipoint', (t) => {
   const [pointId] = Draw.add(getGeoJSON('point'));
   const [point2Id] = Draw.add(getGeoJSON('point2'));
   Draw.changeMode('simple_select', { featureIds: [pointId, point2Id]});
 
   Draw.combineFeatures();
-  assert.equal(Draw.getAll().features.length, 1, 'can combine two features');
-  assert.equal(Draw.getAll().features[0].geometry.type, 'MultiPoint', 'can combine two points into MultiPoint');
-  assert.deepEqual(Draw.getAll().features[0].geometry.coordinates[0], getGeoJSON('point').geometry.coordinates, 'first set of coordinates in multipoint matches with first point in selection');
-  assert.deepEqual(Draw.getAll().features[0].geometry.coordinates[1], getGeoJSON('point2').geometry.coordinates, 'second set of coordinates in multipoint matches with second point in selection');
+  t.equals(Draw.getAll().features.length, 1, 'can combine two features');
+  t.equals(Draw.getAll().features[0].geometry.type, 'MultiPoint', 'can combine two points into MultiPoint');
+  t.deepEquals(Draw.getAll().features[0].geometry.coordinates[0], getGeoJSON('point').geometry.coordinates, 'first set of coordinates in multipoint matches with first point in selection');
+  t.deepEquals(Draw.getAll().features[0].geometry.coordinates[1], getGeoJSON('point2').geometry.coordinates, 'second set of coordinates in multipoint matches with second point in selection');
   Draw.deleteAll();
+  t.end();
 });
 
-test('Draw.combineFeatures -- linestring + linestring = multilinestring', () => {
+test('Draw.combineFeatures -- linestring + linestring = multilinestring', (t) => {
   const [lineId] = Draw.add(getGeoJSON('line'));
   const [line2Id] = Draw.add(getGeoJSON('line2'));
   Draw.changeMode('simple_select', { featureIds: [lineId, line2Id]});
 
   Draw.combineFeatures();
-  assert.equal(Draw.getAll().features.length, 1, 'can combine two features');
-  assert.equal(Draw.getAll().features[0].geometry.type, 'MultiLineString', 'can combine two linestrings into MultiLineString');
-  assert.deepEqual(Draw.getAll().features[0].geometry.coordinates[0], getGeoJSON('line').geometry.coordinates, 'first set of coordinates in multilinestring matches with first line in selection');
-  assert.deepEqual(Draw.getAll().features[0].geometry.coordinates[1], getGeoJSON('line2').geometry.coordinates, 'second set of coordinates in multilinestring matches with second line selection');
+  t.equals(Draw.getAll().features.length, 1, 'can combine two features');
+  t.equals(Draw.getAll().features[0].geometry.type, 'MultiLineString', 'can combine two linestrings into MultiLineString');
+  t.deepEquals(Draw.getAll().features[0].geometry.coordinates[0], getGeoJSON('line').geometry.coordinates, 'first set of coordinates in multilinestring matches with first line in selection');
+  t.deepEquals(Draw.getAll().features[0].geometry.coordinates[1], getGeoJSON('line2').geometry.coordinates, 'second set of coordinates in multilinestring matches with second line selection');
   Draw.deleteAll();
+  t.end();
 });
 
 
-test('Draw.combineFeatures -- point + multipoint = multipoint', () => {
+test('Draw.combineFeatures -- point + multipoint = multipoint', (t) => {
   const [pointId] = Draw.add(getGeoJSON('point'));
   const [multipointId] = Draw.add(getGeoJSON('multiPoint'));
   Draw.changeMode('simple_select', { featureIds: [pointId, multipointId]});
 
   Draw.combineFeatures();
-  assert.equal(Draw.getAll().features.length, 1, 'can combine two features');
-  assert.equal(Draw.getAll().features[0].geometry.type, 'MultiPoint', 'can combine two points into MultiPoint');
-  assert.deepEqual(Draw.getAll().features[0].geometry.coordinates[0], getGeoJSON('point').geometry.coordinates, 'first set of coordinates in multipoint matches with first point in selection');
-  assert.deepEqual(Draw.getAll().features[0].geometry.coordinates[1], getGeoJSON('multiPoint').geometry.coordinates[0], 'second set of coordinates in multipoint matches with first set of coordinates in multipoint in selection');
-  assert.deepEqual(Draw.getAll().features[0].geometry.coordinates[2], getGeoJSON('multiPoint').geometry.coordinates[1], 'third set of coordinates in multipoint matches with second set of coordinates in multipoint in selection');
+  t.equals(Draw.getAll().features.length, 1, 'can combine two features');
+  t.equals(Draw.getAll().features[0].geometry.type, 'MultiPoint', 'can combine two points into MultiPoint');
+  t.deepEquals(Draw.getAll().features[0].geometry.coordinates[0], getGeoJSON('point').geometry.coordinates, 'first set of coordinates in multipoint matches with first point in selection');
+  t.deepEquals(Draw.getAll().features[0].geometry.coordinates[1], getGeoJSON('multiPoint').geometry.coordinates[0], 'second set of coordinates in multipoint matches with first set of coordinates in multipoint in selection');
+  t.deepEquals(Draw.getAll().features[0].geometry.coordinates[2], getGeoJSON('multiPoint').geometry.coordinates[1], 'third set of coordinates in multipoint matches with second set of coordinates in multipoint in selection');
   Draw.deleteAll();
+  t.end();
 });
 
-test('Draw.combineFeatures -- return on non-similar features', () => {
+test('Draw.combineFeatures -- return on non-similar features', (t) => {
   const [lineId] = Draw.add(getGeoJSON('line'));
   const [polygonId] = Draw.add(getGeoJSON('polygon'));
   Draw.changeMode('simple_select', { featureIds: [lineId, polygonId]});
 
   Draw.combineFeatures();
-  assert.equal(Draw.getAll().features.length, 2, 'should not combine non similar features');
+  t.equals(Draw.getAll().features.length, 2, 'should not combine non similar features');
   Draw.deleteAll();
+  t.end();
 });
 
-test('Draw.combineFeatures -- do nothing on non-similar features', () => {
+test('Draw.combineFeatures -- do nothing on non-similar features', (t) => {
   const [lineId] = Draw.add(getGeoJSON('line'));
   const [polygonId] = Draw.add(getGeoJSON('polygon'));
   Draw.changeMode('simple_select', { featureIds: [lineId, polygonId]});
 
   Draw.combineFeatures();
-  assert.equal(Draw.getAll().features.length, 2, 'should not combine non similar features');
+  t.equals(Draw.getAll().features.length, 2, 'should not combine non similar features');
   Draw.deleteAll();
+  t.end();
 });
 
-test('Draw.combineFeatures -- work for multifeature + feature', () => {
+test('Draw.combineFeatures -- work for multifeature + feature', (t) => {
   const [multipolygonId] = Draw.add(getGeoJSON('multiPolygon'));
   const [polygonId] = Draw.add(getGeoJSON('polygon'));
   Draw.changeMode('simple_select', { featureIds: [polygonId, multipolygonId]});
 
   Draw.combineFeatures();
-  assert.equal(Draw.getAll().features.length, 1, 'should work for multifeature + feature');
+  t.equals(Draw.getAll().features.length, 1, 'should work for multifeature + feature');
   Draw.deleteAll();
+  t.end();
 });
 
-test('Draw.combineFeatures -- should do nothing if nothing is selected', () => {
+test('Draw.combineFeatures -- should do nothing if nothing is selected', (t) => {
   Draw.add(getGeoJSON('multiPolygon'));
   Draw.add(getGeoJSON('polygon'));
   Draw.changeMode('simple_select', {});
 
   Draw.combineFeatures();
-  assert.equal(Draw.getAll().features.length, 2, 'should do nothing if nothing is selected');
+  t.equals(Draw.getAll().features.length, 2, 'should do nothing if nothing is selected');
   Draw.deleteAll();
+  t.end();
 });
 
-test('Draw.uncombineFeatures -- multilinestring', () => {
+test('Draw.uncombineFeatures -- multilinestring', (t) => {
   const [multiLineStringId] = Draw.add(getGeoJSON('multiLineString'));
   Draw.changeMode('simple_select', { featureIds: [multiLineStringId]});
 
   Draw.uncombineFeatures();
   const featuresInDraw = Draw.getAll().features;
 
-  assert.equal(featuresInDraw.length, 2, 'can uncombine multiLineString');
+  t.equals(featuresInDraw.length, 2, 'can uncombine multiLineString');
 
-  assert.deepEqual(featuresInDraw[0].geometry.coordinates,
+  t.deepEquals(featuresInDraw[0].geometry.coordinates,
     getGeoJSON('multiLineString').geometry.coordinates[0],
     'first set of coordinates in multilinestring matches with first lineString in selection');
 
-  assert.deepEqual(featuresInDraw[1].geometry.coordinates,
+  t.deepEquals(featuresInDraw[1].geometry.coordinates,
     getGeoJSON('multiLineString').geometry.coordinates[1],
     'second set of coordinates in multilinestring matches with second lineString in selection');
 
   Draw.deleteAll();
+  t.end();
 });
 
-test('Draw.uncombineFeatures -- multipolygon', () => {
+test('Draw.uncombineFeatures -- multipolygon', (t) => {
   const [multipolygon2Id] = Draw.add(getGeoJSON('multiPolygon2'));
   Draw.changeMode('simple_select', { featureIds: [multipolygon2Id]});
 
@@ -527,20 +539,21 @@ test('Draw.uncombineFeatures -- multipolygon', () => {
 
   const featuresInDraw = Draw.getAll().features;
 
-  assert.equal(featuresInDraw.length, 2, 'can uncombine multipolygon');
+  t.equals(featuresInDraw.length, 2, 'can uncombine multipolygon');
 
-  assert.deepEqual(featuresInDraw[0].geometry.coordinates,
+  t.deepEquals(featuresInDraw[0].geometry.coordinates,
     getGeoJSON('multiPolygon2').geometry.coordinates[0],
     'first set of coordinates in multipolygon matches with first polygon in selection');
 
-  assert.deepEqual(featuresInDraw[1].geometry.coordinates,
+  t.deepEquals(featuresInDraw[1].geometry.coordinates,
     getGeoJSON('multiPolygon2').geometry.coordinates[1],
     'second set of coordinates in multipolygon matches with second polygon in selection');
 
   Draw.deleteAll();
+  t.end();
 });
 
-test('Draw.uncombineFeatures -- multipoint', () => {
+test('Draw.uncombineFeatures -- multipoint', (t) => {
   const [multipointId] = Draw.add(getGeoJSON('multiPoint'));
   Draw.changeMode('simple_select', { featureIds: [multipointId]});
 
@@ -548,48 +561,53 @@ test('Draw.uncombineFeatures -- multipoint', () => {
 
   const featuresInDraw = Draw.getAll().features;
 
-  assert.equal(featuresInDraw.length, 2, 'can uncombine multipoint');
+  t.equals(featuresInDraw.length, 2, 'can uncombine multipoint');
 
-  assert.deepEqual(featuresInDraw[0].geometry.coordinates,
+  t.deepEquals(featuresInDraw[0].geometry.coordinates,
     getGeoJSON('multiPoint').geometry.coordinates[0],
     'first set of coordinates in multipoint matches with first point in selection');
 
-  assert.deepEqual(featuresInDraw[1].geometry.coordinates,
+  t.deepEquals(featuresInDraw[1].geometry.coordinates,
     getGeoJSON('multiPoint').geometry.coordinates[1],
     'second set of coordinates in multipoint matches with second point in selection');
 
   Draw.deleteAll();
+  t.end();
 });
 
-test('Draw.uncombineFeatures -- should do nothing if nothing is selected', () => {
+test('Draw.uncombineFeatures -- should do nothing if nothing is selected', (t) => {
   Draw.add(getGeoJSON('multiPolygon'));
   Draw.add(getGeoJSON('polygon'));
   Draw.changeMode('simple_select', {});
 
   Draw.uncombineFeatures();
-  assert.equal(Draw.getAll().features.length, 2, 'should do nothing if nothing is selected');
+  t.equals(Draw.getAll().features.length, 2, 'should do nothing if nothing is selected');
   Draw.deleteAll();
+  t.end();
 });
 
-test('Draw.uncombineFeatures -- should do nothing if nothing if only non multifeature is selected', () => {
+test('Draw.uncombineFeatures -- should do nothing if nothing if only non multifeature is selected', (t) => {
   const [polygonId] = Draw.add(getGeoJSON('polygon'));
   const [pointId] = Draw.add(getGeoJSON('point'));
   Draw.changeMode('simple_select', { featureIds: [polygonId, pointId]});
 
   Draw.uncombineFeatures();
-  assert.equal(Draw.getAll().features.length, 2, 'should do nothing if nothing is selected');
+  t.equals(Draw.getAll().features.length, 2, 'should do nothing if nothing is selected');
   Draw.deleteAll();
+  t.end();
 });
 
-test('Draw.setFeatureProperty', () => {
+test('Draw.setFeatureProperty', (t) => {
   Draw.add(getGeoJSON('point'));
   const featureId = Draw.getAll().features[0].id;
   const drawInstance = Draw.setFeatureProperty(featureId, 'price', 200);
-  assert.equal(drawInstance, Draw, 'returns Draw instance');
-  assert.equal(Draw.get(featureId).properties.price, 200, 'Draw.setFeatureProperty adds a property');
+  t.equals(drawInstance, Draw, 'returns Draw instance');
+  t.equals(Draw.get(featureId).properties.price, 200, 'Draw.setFeatureProperty adds a property');
+  t.end();
 });
 
-test('Cleanup', () => {
+test('Cleanup', (t) => {
   Draw.deleteAll();
   Draw.onRemove();
+  t.end();
 });
