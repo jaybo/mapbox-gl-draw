@@ -94,6 +94,8 @@ DrawLineString.onMouseMove = function(state, e) {
   }
 };
 
+// jaybo
+
 DrawLineString.onClick = function(state, e) {
   if (CommonSelectors.isVertex(e)) return this.clickOnVertex(state, e);
   this.clickAnywhere(state, e);
@@ -102,14 +104,20 @@ DrawLineString.onClick = function(state, e) {
 DrawLineString.lastTapTime = Date.now();
 
 DrawLineString.onTap = function (state, e) {
-  const now = Date.now();
-  const tapDebounceTimeMS = 800;
-  if (now - this.lastTapTime < tapDebounceTimeMS) {
-    return;
+  if (CommonSelectors.isVertex(e)) {
+    const now = Date.now();
+    const tapDebounceTimeMS = 800;
+    if (now - this.lastTapTime < tapDebounceTimeMS) {
+      return;
+    }
+    this.lastTapTime = now;
+    return this.clickOnVertex(state, e);
   }
-  this.lastTapTime = now;
-  if (CommonSelectors.isVertex(e)) return this.clickOnVertex(state, e);
   this.clickAnywhere(state, e);
+};
+
+DrawLineString.onTouchEnd = function() {
+  DrawLineString.lastTapTime = Date.now();
 };
 
 DrawLineString.onKeyUp = function(state, e) {

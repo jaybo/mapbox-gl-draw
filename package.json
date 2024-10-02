@@ -1,6 +1,6 @@
 {
   "name": "@jayborseth/mapbox-gl-draw",
-  "version": "1.4.3-3",
+  "version": "1.4.3-4",
   "description": "A drawing component for Mapbox GL JS",
   "homepage": "https://github.com/jaybo/mapbox-gl-draw",
   "author": "mapbox",
