@@ -103,7 +103,7 @@ DrawLineString.lastTapTime = Date.now();
 
 DrawLineString.onTap = function (state, e) {
   const now = Date.now();
-  const tapDebounceTimeMS = 500;
+  const tapDebounceTimeMS = 800;
   if (now - this.lastTapTime < tapDebounceTimeMS) {
     return;
   }

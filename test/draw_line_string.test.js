@@ -501,7 +501,7 @@ test('draw_line_string mouse interaction', (t) => {
 });
 
 // jaybo
-const tapDebounceDelayMS = 700;
+const tapDebounceDelayMS = 1000;
 function sleep(milliseconds) {
   const date = Date.now();
   let currentDate = null;
