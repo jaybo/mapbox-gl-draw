@@ -1,4 +1,4 @@
-import * as Constants from './constants';
+import * as Constants from './constants.js';
 
 export default function render() {
   // eslint-disable-next-line no-invalid-this
@@ -35,6 +35,7 @@ export default function render() {
     const feature = store.get(id);
     const featureInternal = feature.internal(mode);
     store.ctx.events.currentModeRender(featureInternal, (geojson) => {
+      geojson.properties.mode = mode;
       store.sources[source].push(geojson);
     });
   }
@@ -51,33 +52,7 @@ export default function render() {
     features: store.sources.hot
   });
 
-  if (store._emitSelectionChange) {
-    store.ctx.map.fire(Constants.events.SELECTION_CHANGE, {
-      features: store.getSelected().map(feature => feature.toGeoJSON()),
-      points: store.getSelectedCoordinates().map(coordinate => ({
-        type: Constants.geojsonTypes.FEATURE,
-        properties: {},
-        geometry: {
-          type: Constants.geojsonTypes.POINT,
-          coordinates: coordinate.coordinates
-        }
-      }))
-    });
-    store._emitSelectionChange = false;
-  }
-
-  if (store._deletedFeaturesToEmit.length) {
-    const geojsonToEmit = store._deletedFeaturesToEmit.map(feature => feature.toGeoJSON());
-
-    store._deletedFeaturesToEmit = [];
-
-    store.ctx.map.fire(Constants.events.DELETE, {
-      features: geojsonToEmit
-    });
-  }
-
   cleanup();
-  store.ctx.map.fire(Constants.events.RENDER, {});
 
   function cleanup() {
     store.isDirty = false;

@@ -1,9 +1,9 @@
-import * as Constants from '../constants';
-import featuresAt from '../lib/features_at';
-import Point from '../feature_types/point';
-import LineString from '../feature_types/line_string';
-import Polygon from '../feature_types/polygon';
-import MultiFeature from '../feature_types/multi_feature';
+import * as Constants from '../constants.js';
+import featuresAt from '../lib/features_at.js';
+import Point from '../feature_types/point.js';
+import LineString from '../feature_types/line_string.js';
+import Polygon from '../feature_types/polygon.js';
+import MultiFeature from '../feature_types/multi_feature.js';
 
 export default function ModeInterface(ctx) {
   this.map = ctx.map;
@@ -149,6 +149,16 @@ ModeInterface.prototype.setActionableState = function(actions = {}) {
  */
 ModeInterface.prototype.changeMode = function(mode, opts = {}, eventOpts = {}) {
   return this._ctx.events.changeMode(mode, opts, eventOpts);
+};
+
+/**
+ * Fire a map event
+ * @name this.fire
+ * @param {String} eventName - the event name.
+ * @param {Object} eventData - the event data object.
+ */
+ModeInterface.prototype.fire = function(eventName, eventData) {
+  return this._ctx.events.fire(eventName, eventData);
 };
 
 /**

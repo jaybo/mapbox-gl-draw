@@ -1,10 +1,10 @@
-import * as CommonSelectors from '../lib/common_selectors';
-import mouseEventPoint from '../lib/mouse_event_point';
-import createSupplementaryPoints from '../lib/create_supplementary_points';
-import StringSet from '../lib/string_set';
-import doubleClickZoom from '../lib/double_click_zoom';
-import moveFeatures from '../lib/move_features';
-import * as Constants from '../constants';
+import * as CommonSelectors from '../lib/common_selectors.js';
+import mouseEventPoint from '../lib/mouse_event_point.js';
+import createSupplementaryPoints from '../lib/create_supplementary_points.js';
+import StringSet from '../lib/string_set.js';
+import doubleClickZoom from '../lib/double_click_zoom.js';
+import moveFeatures from '../lib/move_features.js';
+import * as Constants from '../constants.js';
 
 const SimpleSelect = {};
 
@@ -18,6 +18,7 @@ SimpleSelect.onSetup = function(opts) {
     canBoxSelect: false,
     dragMoving: false,
     canDragMove: false,
+    initialDragPanState: this.map.dragPan.isEnabled(),
     initiallySelectedFeatureIds: opts.featureIds || []
   };
 
@@ -34,7 +35,7 @@ SimpleSelect.onSetup = function(opts) {
 };
 
 SimpleSelect.fireUpdate = function() {
-  this.map.fire(Constants.events.UPDATE, {
+  this.fire(Constants.events.UPDATE, {
     action: Constants.updateActions.MOVE,
     features: this.getSelected().map(f => f.toGeoJSON())
   });
@@ -85,7 +86,9 @@ SimpleSelect.stopExtendedInteractions = function(state) {
     state.boxSelectElement = null;
   }
 
-  this.map.dragPan.enable();
+  if ((state.canDragMove || state.canBoxSelect) && state.initialDragPanState === true) {
+    this.map.dragPan.enable();
+  }
 
   state.boxSelecting = false;
   state.canBoxSelect = false;
@@ -207,6 +210,7 @@ SimpleSelect.clickOnFeature = function(state, e) {
 };
 
 SimpleSelect.onMouseDown = function(state, e) {
+  state.initialDragPanState = this.map.dragPan.isEnabled();
   if (CommonSelectors.isActiveFeature(e)) return this.startOnActiveFeature(state, e);
   if (this.drawConfig.boxSelect && CommonSelectors.isShiftMousedown(e)) return this.startBoxSelect(state, e);
 };
@@ -343,7 +347,7 @@ SimpleSelect.onCombineFeatures = function() {
     this.deleteFeature(this.getSelectedIds(), { silent: true });
     this.setSelected([multiFeature.id]);
 
-    this.map.fire(Constants.events.COMBINE_FEATURES, {
+    this.fire(Constants.events.COMBINE_FEATURES, {
       createdFeatures: [multiFeature.toGeoJSON()],
       deletedFeatures: featuresCombined
     });
@@ -374,7 +378,7 @@ SimpleSelect.onUncombineFeatures = function() {
   }
 
   if (createdFeatures.length > 1) {
-    this.map.fire(Constants.events.UNCOMBINE_FEATURES, {
+    this.fire(Constants.events.UNCOMBINE_FEATURES, {
       createdFeatures,
       deletedFeatures: featuresUncombined
     });

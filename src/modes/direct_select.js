@@ -1,9 +1,9 @@
-import {noTarget, isOfMetaType, isActiveFeature, isInactiveFeature, isShiftDown} from '../lib/common_selectors';
-import createSupplementaryPoints from '../lib/create_supplementary_points';
-import constrainFeatureMovement from '../lib/constrain_feature_movement';
-import doubleClickZoom from '../lib/double_click_zoom';
-import * as Constants from '../constants';
-import moveFeatures from '../lib/move_features';
+import { noTarget, isOfMetaType, isActiveFeature, isInactiveFeature, isShiftDown } from '../lib/common_selectors.js';
+import createSupplementaryPoints from '../lib/create_supplementary_points.js';
+import constrainFeatureMovement from '../lib/constrain_feature_movement.js';
+import doubleClickZoom from '../lib/double_click_zoom.js';
+import * as Constants from '../constants.js';
+import moveFeatures from '../lib/move_features.js';
 
 const isVertex = isOfMetaType(Constants.meta.VERTEX);
 const isMidpoint = isOfMetaType(Constants.meta.MIDPOINT);
@@ -13,7 +13,7 @@ const DirectSelect = {};
 // INTERNAL FUCNTIONS
 
 DirectSelect.fireUpdate = function() {
-  this.map.fire(Constants.events.UPDATE, {
+  this.fire(Constants.events.UPDATE, {
     action: Constants.updateActions.CHANGE_COORDINATES,
     features: this.getSelected().map(f => f.toGeoJSON())
   });
@@ -28,13 +28,17 @@ DirectSelect.fireActionable = function(state) {
 };
 
 DirectSelect.startDragging = function(state, e) {
+  state.initialDragPanState = this.map.dragPan.isEnabled();
+
   this.map.dragPan.disable();
   state.canDragMove = true;
   state.dragMoveLocation = e.lngLat;
 };
 
 DirectSelect.stopDragging = function(state) {
-  this.map.dragPan.enable();
+  if (state.canDragMove && state.initialDragPanState === true) {
+    this.map.dragPan.enable();
+  }
   state.dragMoving = false;
   state.canDragMove = false;
   state.dragMoveLocation = null;
@@ -128,7 +132,7 @@ DirectSelect.onSetup = function(opts) {
     dragMoveLocation: opts.startPos || null,
     dragMoving: false,
     canDragMove: false,
-    selectedCoordPaths: opts.coordPath ? [opts.coordPath] : []
+    selectedCoordPaths: opts.coordPath ? [opts.coordPath] : [],
   };
 
   this.setSelectedCoordinates(this.pathsToCoordinates(featureId, state.selectedCoordPaths));

@@ -1,8 +1,8 @@
-import * as CommonSelectors from '../lib/common_selectors';
-import doubleClickZoom from '../lib/double_click_zoom';
-import * as Constants from '../constants';
-import isEventAtCoordinates from '../lib/is_event_at_coordinates';
-import createVertex from '../lib/create_vertex';
+import * as CommonSelectors from '../lib/common_selectors.js';
+import doubleClickZoom from '../lib/double_click_zoom.js';
+import * as Constants from '../constants.js';
+import isEventAtCoordinates from '../lib/is_event_at_coordinates.js';
+import createVertex from '../lib/create_vertex.js';
 
 const DrawPolygon = {};
 
@@ -78,7 +78,7 @@ DrawPolygon.onStop = function(state) {
   //remove last added coordinate
   state.polygon.removeCoordinate(`0.${state.currentVertexPosition}`);
   if (state.polygon.isValid()) {
-    this.map.fire(Constants.events.CREATE, {
+    this.fire(Constants.events.CREATE, {
       features: [state.polygon.toGeoJSON()]
     });
   } else {
