@@ -101,23 +101,20 @@ DrawLineString.onClick = function(state, e) {
   this.clickAnywhere(state, e);
 };
 
+const tapDebounceTimeMS = 800;
 DrawLineString.lastTapTime = Date.now();
 
 DrawLineString.onTap = function (state, e) {
   if (CommonSelectors.isVertex(e)) {
     const now = Date.now();
-    const tapDebounceTimeMS = 800;
-    if (now - this.lastTapTime < tapDebounceTimeMS) {
+    const elapsed = now - this.lastTapTime;
+    this.lastTapTime = now;
+    if (elapsed < tapDebounceTimeMS) {
       return;
     }
-    this.lastTapTime = now;
     return this.clickOnVertex(state, e);
   }
   this.clickAnywhere(state, e);
-};
-
-DrawLineString.onTouchEnd = function() {
-  DrawLineString.lastTapTime = Date.now();
 };
 
 DrawLineString.onKeyUp = function(state, e) {
