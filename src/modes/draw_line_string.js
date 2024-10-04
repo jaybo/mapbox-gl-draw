@@ -97,17 +97,11 @@ DrawLineString.onMouseMove = function(state, e) {
 // jaybo
 
 DrawLineString.onClick = function (state, e) {
-  // if (CommonSelectors.isVertex(e) && state.currentVertexPosition === 1) {
-  //   // tapping initial point again?
-  //   console.log("here ", state);
-  //   return;
-  // }
-  // console.log("ther ", state);
   if (CommonSelectors.isVertex(e)) return this.clickOnVertex(state, e);
   this.clickAnywhere(state, e);
 };
 
-const tapDebounceTimeMS = 1000;
+const tapDebounceTimeMS = 1200;
 DrawLineString.lastTapTime = Date.now();
 
 DrawLineString.onTap = function (state, e) {
