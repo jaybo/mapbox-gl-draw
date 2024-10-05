@@ -94,23 +94,31 @@ DrawLineString.onMouseMove = function(state, e) {
   }
 };
 
-DrawLineString.onClick = function(state, e) {
+// jaybo
+
+DrawLineString.onClick = function (state, e) {
   if (CommonSelectors.isVertex(e)) return this.clickOnVertex(state, e);
   this.clickAnywhere(state, e);
 };
 
+const tapDebounceTimeMS = 1200;
 DrawLineString.lastTapTime = Date.now();
 
 DrawLineString.onTap = function (state, e) {
-  const now = Date.now();
-  const tapDebounceTimeMS = 800;
-  if (now - this.lastTapTime < tapDebounceTimeMS) {
-    return;
+  if (CommonSelectors.isVertex(e)) {
+    const now = Date.now();
+    const elapsed = now - this.lastTapTime;
+    this.lastTapTime = now;
+    // tapping initial point again?
+    if (elapsed < tapDebounceTimeMS || state.currentVertexPosition === 1) {
+      return;
+    }
+    return this.clickOnVertex(state, e);
   }
-  this.lastTapTime = now;
-  if (CommonSelectors.isVertex(e)) return this.clickOnVertex(state, e);
   this.clickAnywhere(state, e);
 };
+
+// end jaybo
 
 DrawLineString.onKeyUp = function(state, e) {
   if (CommonSelectors.isEnterKey(e)) {
