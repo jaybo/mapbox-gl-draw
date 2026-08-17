@@ -1,8 +1,8 @@
-import * as CommonSelectors from '../lib/common_selectors';
-import isEventAtCoordinates from '../lib/is_event_at_coordinates';
-import doubleClickZoom from '../lib/double_click_zoom';
-import * as Constants from '../constants';
-import createVertex from '../lib/create_vertex';
+import * as CommonSelectors from '../lib/common_selectors.js';
+import isEventAtCoordinates from '../lib/is_event_at_coordinates.js';
+import doubleClickZoom from '../lib/double_click_zoom.js';
+import * as Constants from '../constants.js';
+import createVertex from '../lib/create_vertex.js';
 
 const DrawLineString = {};
 
@@ -100,8 +100,10 @@ DrawLineString.onMouseMove = function(state, e) {
 
 const tapDebounceTimeMS = 1200;
 const tapDuplicateTimeMS = 150;
-DrawLineString.lastTapTime = Date.now();
-DrawLineString.lastVertexTapTime = Date.now();
+// 0 = "no tap yet": a Date.now() init would make fresh mode instances treat real
+// clicks in the first 1.2s after module load as ghosts
+DrawLineString.lastTapTime = 0;
+DrawLineString.lastVertexTapTime = 0;
 
 DrawLineString.onClick = function (state, e) {
   // Standalone iOS PWAs deliver an emulated mouse click after each tap that
@@ -153,7 +155,7 @@ DrawLineString.onStop = function(state) {
   //remove last added coordinate
   state.line.removeCoordinate(`${state.currentVertexPosition}`);
   if (state.line.isValid()) {
-    this.map.fire(Constants.events.CREATE, {
+    this.fire(Constants.events.CREATE, {
       features: [state.line.toGeoJSON()]
     });
   } else {

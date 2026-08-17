@@ -1,10 +1,10 @@
-import Feature from './feature';
-import * as Constants from '../constants';
-import hat from 'hat';
+import {generateID} from '../lib/id.js';
+import Feature from './feature.js';
+import * as Constants from '../constants.js';
 
-import MultiPoint from './point';
-import MultiLineString from './line_string';
-import MultiPolygon from './polygon';
+import MultiPoint from './point.js';
+import MultiLineString from './line_string.js';
+import MultiPolygon from './polygon.js';
 
 const models = {
   MultiPoint,
@@ -33,7 +33,7 @@ MultiFeature.prototype = Object.create(Feature.prototype);
 MultiFeature.prototype._coordinatesToFeatures = function(coordinates) {
   const Model = this.model.bind(this);
   return coordinates.map(coords => new Model(this.ctx, {
-    id: hat(),
+    id: generateID(),
     type: Constants.geojsonTypes.FEATURE,
     properties: {},
     geometry: {
