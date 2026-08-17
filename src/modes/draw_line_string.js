@@ -68,9 +68,11 @@ DrawLineString.onSetup = function(opts) {
   };
 };
 
-DrawLineString.clickAnywhere = function(state, e) {
+DrawLineString.clickAnywhere = function(state, e, isDebouncedTap) {
   if (state.currentVertexPosition > 0 && isEventAtCoordinates(e, state.line.coordinates[state.currentVertexPosition - 1]) ||
       state.direction === 'backwards' && isEventAtCoordinates(e, state.line.coordinates[state.currentVertexPosition + 1])) {
+    // jaybo: a duplicate tap re-fired at the same spot is not a deliberate finish
+    if (isDebouncedTap) return;
     return this.changeMode(Constants.modes.SIMPLE_SELECT, { featureIds: [state.line.id] });
   }
   this.updateUIClasses({ mouse: Constants.cursors.ADD });
@@ -96,26 +98,38 @@ DrawLineString.onMouseMove = function(state, e) {
 
 // jaybo
 
+const tapDebounceTimeMS = 1200;
+const tapDuplicateTimeMS = 150;
+DrawLineString.lastTapTime = Date.now();
+DrawLineString.lastVertexTapTime = Date.now();
+
 DrawLineString.onClick = function (state, e) {
+  // Standalone iOS PWAs deliver an emulated mouse click after each tap that
+  // touchend preventDefault() does not suppress (unlike in a browser tab).
+  // Any click this soon after a tap is a ghost, wherever it landed.
+  if (Date.now() - this.lastTapTime < tapDebounceTimeMS) return;
   if (CommonSelectors.isVertex(e)) return this.clickOnVertex(state, e);
   this.clickAnywhere(state, e);
 };
 
-const tapDebounceTimeMS = 1200;
-DrawLineString.lastTapTime = Date.now();
-
 DrawLineString.onTap = function (state, e) {
+  const now = Date.now();
+  const sinceAnyTap = now - this.lastTapTime;
+  this.lastTapTime = now;
   if (CommonSelectors.isVertex(e)) {
-    const now = Date.now();
-    const elapsed = now - this.lastTapTime;
-    this.lastTapTime = now;
+    // a near-instant re-fire of the tap that placed this vertex, not a double tap
+    if (sinceAnyTap < tapDuplicateTimeMS) return;
+    // the finish gesture (double tap on the last vertex) is timed against previous
+    // VERTEX taps only, so the placing tap a few hundred ms earlier doesn't swallow it
+    const sinceVertexTap = now - this.lastVertexTapTime;
+    this.lastVertexTapTime = now;
     // tapping initial point again?
-    if (elapsed < tapDebounceTimeMS || state.currentVertexPosition === 1) {
+    if (sinceVertexTap < tapDebounceTimeMS || state.currentVertexPosition === 1) {
       return;
     }
     return this.clickOnVertex(state, e);
   }
-  this.clickAnywhere(state, e);
+  this.clickAnywhere(state, e, sinceAnyTap < tapDebounceTimeMS);
 };
 
 // end jaybo
